@@ -12,12 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, X, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -35,11 +36,8 @@ const Signup = () => {
       minLength: formData.password.length >= 8,
       hasNumber: /\d/.test(formData.password),
       hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password),
-      match:
-        formData.password.length > 0 &&
-        formData.password === formData.confirmPassword,
-    });
-  }, [formData.password, formData.confirmPassword]);
+      });
+  }, [formData.password]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -77,6 +75,16 @@ const Signup = () => {
         </CardHeader>
 
         <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Enter your name"
+              onChange={handleChange}
+              className="focus:ring-[#A65E2E]"
+            />
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -129,16 +137,6 @@ const Signup = () => {
                 text="Passwords match"
               />
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              onChange={handleChange}
-              className={`focus:ring-[#A65E2E] ${formData.confirmPassword && !validations.match ? "border-red-500" : ""}`}
-            />
           </div>
         </CardContent>
 

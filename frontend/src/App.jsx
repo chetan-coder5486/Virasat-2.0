@@ -1,18 +1,28 @@
-import React from 'react'
-import { createBrowserRouter,RouterProvider } from 'react-router-dom'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
+import React from "react";
+import {
+  BrowserRouter,
+  createBrowserRouter,
+  Route,
+  RouterProvider,
+  Routes,
+} from "react-router-dom";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import { AuthProvider } from "@/context/AuthContext.jsx";
 
-const appRouter = createBrowserRouter([
-  { path: '/', element: <Home /> },
-  { path: '/login', element: <Login/>},
-  { path: '/signup', element: <Signup/>}
-])
 const App = () => {
   return (
-     <RouterProvider router={appRouter} />
-  )
-}
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;

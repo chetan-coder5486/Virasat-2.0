@@ -8,9 +8,9 @@ import { clearRefreshToken, generateAccessToken, generateRefreshToken, sendRefre
 
 export const registerUser = async (req, res) => {
     try {
-        const { name, username, email, password } = req.body;
+        const { name, email, password } = req.body;
         // Basic validation
-        if (!name || !username || !email || !password) {
+        if (!name || !email || !password) {
             return res.status(400).json({ message: 'All fields are required', success: false });
         }
         // Check if user already exists
@@ -19,7 +19,7 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User with this email already exists', success: false })
         }
         const hashedPassword = await bcryptjs.hash(password, 10);
-        const user = await User.create({ name, username, email, password: hashedPassword })
+        const user = await User.create({ name, email, password: hashedPassword })
         const accessToken = generateAccessToken(user)
         const refreshToken = generateRefreshToken(user)
 
