@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { createContext, useState } from "react";
 import axios from "axios";
 
@@ -20,72 +20,89 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
 
-  //Axios instance with interceptors
+  // ✅ FIXED: Create axios instance only once using useMemo
+  const api = useMemo(() => {
+    const instance = axios.create({
+      baseURL: API_BASE_URL,
+      withCredentials: true,
+    });
 
-  const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true, //Send cookies with every request
-  });
-
-  //Request interceptor to add access token to headers
-  api.interceptors.request.use(
-    (config) => {
-      if (accessToken) {
-        config.headers["Authorization"] = `Bearer ${accessToken}`;
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    },
-  );
-
-  // Response interceptor - handle token refresh
-
-  api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
-      if (
-        error.response &&
-        error.response.status === 401 &&
-        !originalRequest._retry
-      ) {
-        originalRequest._retry = true;
-
-        try {
-          const { data } = await axios.post(
-            `${API_BASE_URL}/auth/refresh`,
-            {},
-            { withCredentials: true },
-          );
-          setAccessToken(data.accessToken);
-          originalRequest.headers["Authorization"] =
-            `Bearer ${data.accessToken}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          // Refresh token failed, log out user
-          setUser(null);
-          setAccessToken(null);
-          return Promise.reject(refreshError);
+    // Request interceptor
+    instance.interceptors.request.use(
+      (config) => {
+        // ⚠️ We'll fix this part below
+        const token = accessToken;
+        if (token) {
+          config.headers["Authorization"] = `Bearer ${token}`;
         }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor
+    instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          !originalRequest._retry
+        ) {
+          originalRequest._retry = true;
+
+          try {
+            const { data } = await axios.post(
+              `${API_BASE_URL}/auth/refresh`,
+              {},
+              { withCredentials: true }
+            );
+            setAccessToken(data.accessToken);
+            originalRequest.headers["Authorization"] =
+              `Bearer ${data.accessToken}`;
+            return instance(originalRequest);
+          } catch (refreshError) {
+            setUser(null);
+            setAccessToken(null);
+            return Promise.reject(refreshError);
+          }
+        }
+        return Promise.reject(error);
       }
-      return Promise.reject(error);
-    },
-  );
+    );
+
+    return instance;
+  }, []); // ✅ Empty dependency array - create once
+
+  // ✅ FIXED: Update interceptor when accessToken changes
+  useEffect(() => {
+    const requestInterceptor = api.interceptors.request.use(
+      (config) => {
+        if (accessToken) {
+          config.headers["Authorization"] = `Bearer ${accessToken}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Cleanup - remove interceptor on unmount or when token changes
+    return () => {
+      api.interceptors.request.eject(requestInterceptor);
+    };
+  }, [accessToken, api]);
 
   // Login function
-
   const login = async (email, password) => {
     try {
       const { data } = await api.post("/auth/login", { email, password });
+      console.log("Login successful:", data);
       setAccessToken(data.accessToken);
       setUser(data.user);
-      return {
-        success: true,
-      };
+      return { success: true };
     } catch (error) {
-      console.error("Login error", error);
+      console.error("Login error:", error);
       return {
         success: false,
         message: error.response?.data?.message || "Login failed",
@@ -120,27 +137,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ✅ Initialize auth on mount - this is CORRECT placement
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log("🔄 Attempting to refresh token...");
         const { data } = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           {},
-          { withCredentials: true },
+          { withCredentials: true }
         );
+        console.log("✅ Token refreshed");
         setAccessToken(data.accessToken);
+
         const userResponse = await axios.get(`${API_BASE_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${data.accessToken}` },
         });
+        console.log("✅ User data loaded:", userResponse.data.user);
         setUser(userResponse.data.user);
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.log("ℹ️ No valid session found");
       } finally {
         setLoading(false);
       }
     };
     initAuth();
-  }, []);
+  }, []); // ✅ Run once on mount
 
   const value = {
     user,
@@ -148,7 +170,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    api, // Expose the Axios instance for making authenticated requests
+    api,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

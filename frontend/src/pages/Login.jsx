@@ -25,7 +25,7 @@ const Login = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        navigate("/dashboard");
+        navigate("/");
       }
     } catch (error) {
       console.log(error);

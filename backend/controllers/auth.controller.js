@@ -25,7 +25,7 @@ export const registerUser = async (req, res) => {
 
         sendRefreshToken(res, refreshToken) // Set HttpOnly cookie
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: 'User registered successfully',
             accessToken,
@@ -38,7 +38,7 @@ export const registerUser = async (req, res) => {
         })
     } catch (error) {
         console.log('Error in registerUser:', error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Error registering user',
             error: error.message
@@ -58,14 +58,14 @@ export const loginUser = async (req, res) => {
                 success: false
             })
         }
-        const user = await User.findOne({ email })
-        if (!user) {
+        const userD = await User.findOne({ email })
+        if (!userD) {
             return res.status(400).json({
                 message: "User does not exist by this email",
                 success: false
             })
         }
-        const isPasswordValid = await (bcryptjs.compare(password, user.password))
+        const isPasswordValid = await (bcryptjs.compare(password, userD.password))
         if (!isPasswordValid) {
             return res.status(401).json({
                 message: "Incorrect email or password",
@@ -73,27 +73,27 @@ export const loginUser = async (req, res) => {
             })
         }
         // Generate tokens
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
+        const accessToken = generateAccessToken(userD);
+        const refreshToken = generateRefreshToken(userD);
 
         // Send refresh token as httpOnly cookie
         sendRefreshToken(res, refreshToken);
 
         // Send response
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: 'Login successful',
             accessToken,
             user: {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-                role: user.role
+                id: userD._id,
+                email: userD.email,
+                name: userD.name,
+                role: userD.role
             }
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Error logging in',
             error: error.message
@@ -215,14 +215,21 @@ export const logoutAll = async (req, res) => {
 
 export const getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-password')
-        res.status(200).json({
+        console.log("hit me");
+        const userD = await User.findById(req.user.userId).select('-password')
+        if (!userD) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        return res.status(200).json({
             success: true,
-            user
-        })
+            user: userD
+        });
     } catch (error) {
         console.error('Get me error:', error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Error fetching user data',
             error: error.message
