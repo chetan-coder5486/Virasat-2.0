@@ -35,7 +35,7 @@ const StoryCard = ({
       <div className="p-5">
         <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
-          <span>{date}</span>
+          <span>{new Date(date).toLocaleDateString("en-IN", { dateStyle: "long" })}</span>
           <span className="text-border">•</span>
           <span>{author}</span>
         </div>

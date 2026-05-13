@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
 
+  console.log("AuthProvider mounted");
   // ✅ FIXED: Create axios instance only once using useMemo
   const api = useMemo(() => {
     const instance = axios.create({

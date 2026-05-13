@@ -1,60 +1,90 @@
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar.jsx";
 import StoryCard from "@/components/StoryCard.jsx";
+import { UploadMemoryModal } from "@/components/UploadMemoryModal.jsx";
 import { motion } from "framer-motion";
 import { Search, Filter, Grid3X3, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
-const stories = [
-  {
-    title: "Grandma's Apple Pie Recipe",
-    excerpt: "Every Thanksgiving, the house would fill with the warm scent of cinnamon and baked apples...",
-    author: "Sarah M.", date: "Nov 1965", tags: ["recipe", "tradition"], likes: 12, comments: 5,
-    imageUrl: "https://images.unsplash.com/photo-1621743478914-cc8a86d7e7b5?w=600&h=400&fit=crop",
-  },
-  {
-    title: "The Summer of '78",
-    excerpt: "That summer we drove all the way to the coast in Dad's old station wagon...",
-    author: "Michael T.", date: "Jul 1978", tags: ["road trip", "summer"], likes: 24, comments: 8,
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop",
-  },
-  {
-    title: "Wedding Day Surprises",
-    excerpt: "Mom and Dad's wedding was supposed to be a small affair...",
-    author: "Jenny K.", date: "Jun 1982", tags: ["wedding", "family"], likes: 31, comments: 14,
-    imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&h=400&fit=crop",
-  },
-  {
-    title: "Letters from the War",
-    excerpt: "We found a box of letters in the attic — handwritten notes from Grandpa James...",
-    author: "David R.", date: "1943", tags: ["history", "letters"], likes: 45, comments: 19,
-    imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&h=400&fit=crop",
-  },
-  {
-    title: "First Day of School",
-    excerpt: "The photo shows Mom standing in front of our old house, backpack nearly bigger than she was...",
-    author: "Lisa P.", date: "Sep 1970", tags: ["childhood", "school"], likes: 18, comments: 7,
-    imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop",
-  },
-  {
-    title: "The Family Garden",
-    excerpt: "Great-grandpa started planting roses in 1932. Three generations later, the garden still blooms...",
-    author: "Anna W.", date: "1932", tags: ["garden", "heritage"], likes: 27, comments: 11,
-    imageUrl: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop",
-  },
-];
-
-const allTags = ["recipe", "tradition", "road trip", "summer", "wedding", "family", "history", "letters", "childhood", "school", "garden", "heritage"];
+import { useAuth } from "@/context/AuthContext";
 
 const Stories = () => {
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [stories, setStories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { api } = useAuth();
+
+  useEffect(() => {
+    if (location.state?.openUpload) {
+      setIsUploadOpen(true);
+      navigate("/stories", { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
+
+  useEffect(() => {
+    const fetchStories = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/story/");
+        const items = response.data?.stories || response.data.data || [];
+        const normalized = items.map((story) => ({
+          id: story._id || story.id || story.slug || story.title,
+          title: story.title || "Untitled",
+          excerpt: story.description || story.story || "",
+          author:
+            story.author?.name || story.authorName || story.author || "Unknown",
+          date: story.date || "",
+          tags: Array.isArray(story.tags) ? story.tags : [],
+          likes: story.likesCount || story.likes?.length || 0,
+          comments: story.commentsCount || story.comments?.length || 0,
+          imageUrl:
+            story.coverImage || story.imageUrl || story.memoryFiles?.[0]?.url,
+        }));
+
+        setStories(normalized);
+        setError("");
+      } catch (err) {
+        console.error("Failed to fetch stories:", err);
+        setError("Failed to load stories.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStories();
+  }, [api]);
+
+  const allTags = useMemo(() => {
+    const tags = new Set();
+    stories.forEach((story) => {
+      story.tags.forEach((tag) => tags.add(tag));
+    });
+    return Array.from(tags);
+  }, [stories]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container py-12 px-10">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <h1 className="mb-2 font-display text-4xl font-bold text-foreground">All Stories</h1>
-          <p className="mb-6 text-muted-foreground">Browse and search through your family's memories</p>
+      {isUploadOpen && (
+        <UploadMemoryModal onClose={() => setIsUploadOpen(false)} />
+      )}
+      <div className="mx-auto w-full max-w-7xl px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
+          <h1 className="mb-2 font-display text-4xl font-bold text-foreground">
+            All Stories
+          </h1>
+          <p className="mb-6 text-muted-foreground">
+            Browse and search through your family's memories
+          </p>
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-[240px] max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -63,20 +93,42 @@ const Stories = () => {
             <Button variant="outline" className="gap-2">
               <Filter className="h-4 w-4" /> Filter
             </Button>
-            <Button variant="outline" size="icon"><Grid3X3 className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon"><List className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon">
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon">
+              <List className="h-4 w-4" />
+            </Button>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {allTags.map((tag) => (
-              <Badge key={tag} variant="outline" className="cursor-pointer hover:bg-secondary">{tag}</Badge>
+              <Badge
+                key={tag}
+                variant="outline"
+                className="cursor-pointer hover:bg-secondary"
+              >
+                {tag}
+              </Badge>
             ))}
           </div>
         </motion.div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {stories.map((story, i) => (
-            <StoryCard key={story.title} {...story} index={i} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            Loading stories...
+          </div>
+        ) : error ? (
+          <div className="py-12 text-center text-sm text-red-600">{error}</div>
+        ) : stories.length === 0 ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            No stories yet. Create your first memory.
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {stories.map((story, i) => (
+              <StoryCard key={story.id} {...story} index={i} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

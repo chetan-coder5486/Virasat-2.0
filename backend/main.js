@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './utils/db.js';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.route.js';
+import storyRoutes from './routes/story.route.js';
 import cors from 'cors';
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(cors({
 //apis
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/story', storyRoutes); 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', message: 'API is healthy' });
 });

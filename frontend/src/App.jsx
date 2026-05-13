@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  BrowserRouter,
-  createBrowserRouter,
-  Route,
-  RouterProvider,
-  Routes,
-} from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -21,13 +15,13 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route 
-            path="/stories" 
+          <Route
+            path="/stories"
             element={
               <ProtectedRoute>
-                <Stories/>
+                <Stories />
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
       </AuthProvider>
