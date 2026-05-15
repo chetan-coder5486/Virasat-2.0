@@ -4,6 +4,7 @@ import { connectDB } from './utils/db.js';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.route.js';
 import storyRoutes from './routes/story.route.js';
+import familyRoutes from './routes/family.route.js';
 import cors from 'cors';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(cors({
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/story', storyRoutes); 
+app.use('/api/v1/family', familyRoutes); // New family routes
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', message: 'API is healthy' });
 });

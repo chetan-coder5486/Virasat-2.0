@@ -39,7 +39,7 @@ export const authorize = (...roles) => {
                 message:"Not authenticated"
             })
         }
-        const allowedRoles = roles.flat() // Flatten in case of authorize(['admin', 'moderator'])
+        const allowedRoles = roles.flat() // Flatten in case of authorize(['creator', 'moderator'])
         if(!allowedRoles.includes(req.user.role)){
             return res.status(403).json({
                 success:false,

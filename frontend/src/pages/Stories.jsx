@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar.jsx";
 import StoryCard from "@/components/StoryCard.jsx";
 import { UploadMemoryModal } from "@/components/UploadMemoryModal.jsx";
+import ViewStoryModal from "@/components/ViewStoryModal.jsx";
 import { motion } from "framer-motion";
 import { Search, Filter, Grid3X3, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,8 @@ import { useAuth } from "@/context/AuthContext";
 
 const Stories = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [selectedStory, setSelectedStory] = useState(null);
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -36,10 +39,14 @@ const Stories = () => {
           id: story._id || story.id || story.slug || story.title,
           title: story.title || "Untitled",
           excerpt: story.description || story.story || "",
+          description: story.description || story.story || "",
           author:
             story.author?.name || story.authorName || story.author || "Unknown",
           date: story.date || "",
           tags: Array.isArray(story.tags) ? story.tags : [],
+          memoryFiles: Array.isArray(story.memoryFiles)
+            ? story.memoryFiles
+            : [],
           likes: story.likesCount || story.likes?.length || 0,
           comments: story.commentsCount || story.comments?.length || 0,
           imageUrl:
@@ -72,6 +79,15 @@ const Stories = () => {
       <Navbar />
       {isUploadOpen && (
         <UploadMemoryModal onClose={() => setIsUploadOpen(false)} />
+      )}
+      {isViewOpen && (
+        <ViewStoryModal
+          story={selectedStory}
+          onClose={() => {
+            setIsViewOpen(false);
+            setSelectedStory(null);
+          }}
+        />
       )}
       <div className="mx-auto w-full max-w-7xl px-6 py-12">
         <motion.div
@@ -125,7 +141,15 @@ const Stories = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {stories.map((story, i) => (
-              <StoryCard key={story.id} {...story} index={i} />
+              <StoryCard
+                key={story.id}
+                {...story}
+                index={i}
+                onClick={() => {
+                  setSelectedStory(story);
+                  setIsViewOpen(true);
+                }}
+              />
             ))}
           </div>
         )}

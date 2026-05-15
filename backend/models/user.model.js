@@ -4,7 +4,8 @@ const userSchema = new mongoose.Schema({
     name: {type:String, required:true},
     email: {type:String, required:true, unique:true},
     password: {type:String, required:true},
-    role: {type:String, enum:['admin','editor','viewer'], default:'viewer'},
+    role: {type:String, enum:['creator','editor','viewer'], default:'creator'},
+    family: {type: mongoose.Schema.Types.ObjectId, ref:'Family'},
     tokenVersion:{            //to invalidate refresh tokens when user logs out or password changes
         type:Number,
         default:0

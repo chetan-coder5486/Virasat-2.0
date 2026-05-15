@@ -12,7 +12,7 @@ const Navbar = () => {
         ? "bg-[#A65E2E] text-white"
         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
     }`;
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleNewStory = () => {
     const targetState = { openUpload: true };
@@ -77,7 +77,15 @@ const Navbar = () => {
             <Plus className="h-4 w-4" />
             New Story
           </button>
-          {!user && (
+          {user ? (
+            <button
+              type="button"
+              onClick={logout}
+              className="inline-flex items-center justify-center text-sm font-medium transition-colors border border-gray-300 bg-white hover:bg-gray-50 h-9 rounded-md px-3"
+            >
+              Logout
+            </button>
+          ) : (
             <Link
               className="inline-flex items-center justify-center text-sm font-medium transition-colors border border-gray-300 bg-white hover:bg-gray-50 h-9 rounded-md px-3"
               to="/login"

@@ -2,8 +2,6 @@ import { motion } from "framer-motion";
 import { Calendar, Tag, MessageCircle, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-
-
 const StoryCard = ({
   title,
   excerpt,
@@ -14,6 +12,7 @@ const StoryCard = ({
   likes,
   comments,
   index = 0,
+  onClick,
 }) => {
   return (
     <motion.div
@@ -21,6 +20,7 @@ const StoryCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       className="group cursor-pointer overflow-hidden rounded-lg border border-border bg-card transition-all hover:shadow-[var(--shadow-elevated)]"
+      onClick={onClick}
     >
       {imageUrl && (
         <div className="relative h-48 overflow-hidden">
@@ -35,7 +35,13 @@ const StoryCard = ({
       <div className="p-5">
         <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
-          <span>{new Date(date).toLocaleDateString("en-IN", { dateStyle: "long" })}</span>
+          <span>
+            {date
+              ? new Date(date).toLocaleDateString("en-IN", {
+                  dateStyle: "long",
+                })
+              : ""}
+          </span>
           <span className="text-border">•</span>
           <span>{author}</span>
         </div>

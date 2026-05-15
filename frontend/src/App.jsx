@@ -6,6 +6,7 @@ import Signup from "./pages/Signup";
 import { AuthProvider } from "@/context/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Stories from "./pages/Stories.jsx";
+import Family from "./pages/Family";
 
 const App = () => {
   return (
@@ -20,6 +21,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Stories />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/family"
+            element={
+              <ProtectedRoute>
+                <Family />
               </ProtectedRoute>
             }
           />
