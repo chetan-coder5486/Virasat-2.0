@@ -1,17 +1,28 @@
 import { Family } from "../models/family.model.js";
+import { User } from "../models/user.model.js";
 
 export const createFamily = async (req, res) => {
     try {
         const { name } = req.body;
-        const creatorId = req.user.userId;
+        const adminId = req.user.userId;
         if (!name) {
             return res.status(400).json({ message: "Family name is required" });
         }
+        const userD = await User.findById(adminId);
+        if (!userD) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (userD.family) {
+            return res.status(400).json({ message: "User is already part of a family" });
+        }
         const newFamily = await Family.create({
             name,
-            creator: creatorId,
-            members: [creatorId]
+            creator: adminId,
+            admins: [adminId],
+            members: [adminId]
         });
+        userD.family = newFamily._id;
+        await userD.save();
         return res.status(201).json({
             success: true,
             message: "Family created successfully",
@@ -32,14 +43,8 @@ export const deleteFamily = async (req, res) => {
 
 export const getFamilyDetails = async (req, res) => {
     const user = req.user.userId;
-    if (!user) {
-        return res.status(401).json({
-            success: false,
-            message: "Unauthorized"
-        });
-    }
     try {
-        const userD = await user.findById(user).populate('family');
+        const userD = await User.findById(user).populate('family');
         if (!userD) {
             return res.status(404).json({
                 success: false,

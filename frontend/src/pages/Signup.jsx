@@ -11,8 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, X, Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext.jsx";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -22,13 +22,16 @@ const Signup = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { register } = useAuth();
 
   // Validation State
   const [validations, setValidations] = useState({
     minLength: false,
     hasNumber: false,
     hasSpecial: false,
-    match: false,
   });
 
   useEffect(() => {
@@ -36,11 +39,36 @@ const Signup = () => {
       minLength: formData.password.length >= 8,
       hasNumber: /\d/.test(formData.password),
       hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password),
-      });
+    });
   }, [formData.password]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+    if (error) setError("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!Object.values(validations).every(Boolean)) return;
+
+    try {
+      setSubmitting(true);
+      const result = await register({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+
+      if (result.success) {
+        navigate("/");
+      } else {
+        setError(result.message || "Registration failed.");
+      }
+    } catch (err) {
+      setError("Registration failed.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const ValidationItem = ({ isMet, text }) => (
@@ -74,90 +102,94 @@ const Signup = () => {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Enter your name"
-              onChange={handleChange}
-              className="focus:ring-[#A65E2E]"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              onChange={handleChange}
-              className="focus:ring-[#A65E2E]"
-            />
-          </div>
-
-          <div className="grid gap-2 relative">
-            <Label htmlFor="password">Create Password</Label>
-            <div className="relative">
+        <form onSubmit={handleSubmit}>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
               <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
+                id="name"
+                type="text"
+                placeholder="Enter your name"
                 onChange={handleChange}
-                className="pr-10 focus:ring-[#A65E2E]"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-
-            {/* Real-time Password Rules Overlay */}
-            <div className="grid grid-cols-2 gap-2 mt-1 p-2 bg-gray-50 rounded-md border border-gray-100">
-              <ValidationItem
-                isMet={validations.minLength}
-                text="At least 8 characters"
-              />
-              <ValidationItem
-                isMet={validations.hasNumber}
-                text="At least 1 number"
-              />
-              <ValidationItem
-                isMet={validations.hasSpecial}
-                text="1 special character"
-              />
-              <ValidationItem
-                isMet={validations.match}
-                text="Passwords match"
+                className="focus:ring-[#A65E2E]"
               />
             </div>
-          </div>
-        </CardContent>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                onChange={handleChange}
+                className="focus:ring-[#A65E2E]"
+              />
+            </div>
 
-        <CardFooter className="flex flex-col gap-4">
-          <Button
-            className="w-full bg-[#A65E2E] hover:bg-[#8e4f26] text-white py-6 text-lg font-semibold transition-all"
-            disabled={!Object.values(validations).every(Boolean)}
-          >
-            Create Account
-          </Button>
+            <div className="grid gap-2 relative">
+              <Label htmlFor="password">Create Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  onChange={handleChange}
+                  className="pr-10 focus:ring-[#A65E2E]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
 
-          <p className="text-sm text-center text-gray-600">
-            Already part of a family?{" "}
-            <Link
-              to="/login"
-              className="text-[#A65E2E] font-bold hover:underline"
+              {/* Real-time Password Rules Overlay */}
+              <div className="grid grid-cols-2 gap-2 mt-1 p-2 bg-gray-50 rounded-md border border-gray-100">
+                <ValidationItem
+                  isMet={validations.minLength}
+                  text="At least 8 characters"
+                />
+                <ValidationItem
+                  isMet={validations.hasNumber}
+                  text="At least 1 number"
+                />
+                <ValidationItem
+                  isMet={validations.hasSpecial}
+                  text="1 special character"
+                />
+              </div>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-4">
+            {error ? (
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            ) : null}
+            <Button
+              type="submit"
+              className="w-full bg-[#A65E2E] hover:bg-[#8e4f26] text-white py-6 text-lg font-semibold transition-all"
+              disabled={
+                !Object.values(validations).every(Boolean) || submitting
+              }
             >
-              Sign In
-            </Link>
-          </p>
-        </CardFooter>
+              {submitting ? "Creating..." : "Create Account"}
+            </Button>
+
+            <p className="text-sm text-center text-gray-600">
+              Already part of a family?{" "}
+              <Link
+                to="/login"
+                className="text-[#A65E2E] font-bold hover:underline"
+              >
+                Sign In
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );
