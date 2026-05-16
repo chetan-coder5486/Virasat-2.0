@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // Assumes you're using React Router
 import { useAuth } from "@/context/AuthContext.jsx";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [email, setEmail] = useState("");

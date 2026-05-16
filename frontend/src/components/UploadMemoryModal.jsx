@@ -14,9 +14,9 @@ import { useAuth } from "@/context/AuthContext";
 const UPLOAD_PRESET = "family_trunk_uploads";
 
 export const UploadMemoryModal = ({ onClose, circleId = null, onSubmit }) => {
-  const { api } = useAuth();
+  const { api,user } = useAuth();
   const todayStr = new Date().toISOString().slice(0, 10);
-
+  const familyId = user?.family;
   const [formData, setFormData] = useState({
     title: "",
     story: "",
@@ -207,19 +207,18 @@ export const UploadMemoryModal = ({ onClose, circleId = null, onSubmit }) => {
         tags,
         isMilestone: formData.isMilestone,
         memoryFiles: uploadedFiles,
-        circleId,
       };
 
       if (onSubmit) {
         await onSubmit(payload);
       } else {
-        await api.post("/story/create", payload);
+        await api.post(`/story/create/${familyId}`, payload);
       }
 
       cleanupPreviews(uploadedMedia);
       onClose();
     } catch (error) {
-      console.error("Failed to create memory:", error);
+      console.error("Failed to create memory:",  error);
     } finally {
       setUploading(false);
     }

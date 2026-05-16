@@ -20,7 +20,7 @@ const Stories = () => {
   const [error, setError] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const { api } = useAuth();
+  const { api,user } = useAuth();
 
   useEffect(() => {
     if (location.state?.openUpload) {
@@ -33,7 +33,13 @@ const Stories = () => {
     const fetchStories = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/story/");
+        const familyId = user?.family;
+        if(!familyId){
+          setError("User is not part of any family.");
+          setLoading(false);
+          return;
+        }
+        const response = await api.get(`/story/${familyId}`);
         const items = response.data?.stories || response.data.data || [];
         const normalized = items.map((story) => ({
           id: story._id || story.id || story.slug || story.title,
@@ -52,7 +58,7 @@ const Stories = () => {
           imageUrl:
             story.coverImage || story.imageUrl || story.memoryFiles?.[0]?.url,
         }));
-
+        console.log("Fetched stories:", normalized);
         setStories(normalized);
         setError("");
       } catch (err) {

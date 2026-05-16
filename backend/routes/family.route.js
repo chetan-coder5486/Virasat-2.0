@@ -4,7 +4,7 @@ import { authenticate, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/create', authenticate, authorize(['admin']), createFamily);
+router.post('/create', authenticate, createFamily);
 router.get('/', authenticate, getFamilyDetails);
 
 export default router;

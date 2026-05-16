@@ -84,12 +84,7 @@ export const loginUser = async (req, res) => {
             success: true,
             message: 'Login successful',
             accessToken,
-            user: {
-                id: userD._id,
-                email: userD.email,
-                name: userD.name,
-                role: userD.role
-            }
+            user: userD
         });
     } catch (error) {
         console.error('Login error:', error);

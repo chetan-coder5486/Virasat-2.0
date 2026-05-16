@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo } from "react";
 import { createContext, useState } from "react";
 import axios from "axios";
+import { Bounce, toast, ToastContainer } from "react-toastify";
 
 const API_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:8080/api/v1";
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     // Response interceptor
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
             const { data } = await axios.post(
               `${API_BASE_URL}/auth/refresh`,
               {},
-              { withCredentials: true }
+              { withCredentials: true },
             );
             setAccessToken(data.accessToken);
             originalRequest.headers["Authorization"] =
@@ -70,7 +71,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
         return Promise.reject(error);
-      }
+      },
     );
 
     return instance;
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     // Cleanup - remove interceptor on unmount or when token changes
@@ -103,6 +104,17 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       return { success: true };
     } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
       console.error("Login error:", error);
       return {
         success: false,
@@ -119,6 +131,19 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       return { success: true };
     } catch (error) {
+      console.table(error.response)
+      toast.error(error.response?.data?.message || "Registration failed", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+      <ToastContainer />;
       return {
         success: false,
         message: error.response?.data?.message || "Registration failed",
@@ -146,7 +171,7 @@ export const AuthProvider = ({ children }) => {
         const { data } = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
         console.log("✅ Token refreshed");
         setAccessToken(data.accessToken);

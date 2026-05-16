@@ -8,11 +8,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Stories from "./pages/Stories.jsx";
 import Family from "./pages/Family";
 import JoinFamily from "./pages/JoinFamily";
+import { ToastContainer } from "react-toastify";
 
 const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -42,6 +44,7 @@ const App = () => {
             }
           />
         </Routes>
+        <ToastContainer/>
       </AuthProvider>
     </BrowserRouter>
   );

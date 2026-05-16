@@ -21,45 +21,36 @@ import Navbar from "@/components/Navbar";
 import CreateFamilyForm from "@/components/CreateFamilyForm";
 import InviteMemberModal from "@/components/InviteMemberModal";
 import { Link } from "react-router";
+import AdminApprovals from "@/pages/AdminApprovals";
+
 
 const Family = () => {
   const [family, setFamily] = useState(null);
   const [showCreateFamily, setShowCreateFamily] = useState(false);
   const [showInviteMember, setShowInviteMember] = useState(false);
-  const { api } = useAuth();
+  const [showJoinRequests, setShowJoinRequests] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { api,user } = useAuth();
   useEffect(() => {
+    
     //fetch family details and members
     const fetchFamilyDetails = async () => {
+      setLoading(true);
       try {
         const response = await api.get("/family/");
         setFamily(response.data.family);
-        console.table(response.data.family);
+        console.log(response.data.family);
       } catch (error) {
         console.error("Error fetching family details:", error);
+      }finally{
+        setLoading(false);
       }
     };
 
     fetchFamilyDetails();
   }, []);
 
-  const mockFamily = {
-    name: "The Johnson Family",
-    stats: {
-      members: 8,
-      stories: 174,
-      since: "1920",
-    },
-    members: [
-      { name: "Grandma Ruth", role: "Admin", stories: 42, emoji: "👵" },
-      { name: "Dad (Michael)", role: "Admin", stories: 28, emoji: "👨" },
-      { name: "Mom (Sarah)", role: "Contributor", stories: 35, emoji: "👩" },
-      { name: "Uncle Frank", role: "Contributor", stories: 15, emoji: "👴" },
-      { name: "Jenny", role: "Contributor", stories: 22, emoji: "👩" },
-      { name: "David", role: "Viewer", stories: 8, emoji: "👦" },
-      { name: "Lisa", role: "Contributor", stories: 19, emoji: "👩" },
-      { name: "Anna", role: "Viewer", stories: 5, emoji: "👧" },
-    ],
-  };
+ 
 
   const handleCreateFamily = () => {
     setShowCreateFamily(true);
@@ -76,9 +67,17 @@ const Family = () => {
   const handleCloseInvite = () => {
     setShowInviteMember(false);
   };
+
   return (
     <>
       <Navbar />
+      {
+        loading ? (
+          <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+            <p className="text-gray-600">Loading family details...</p>
+          </div>
+        ) : null
+      }
       <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-white to-[#f6f2ee]">
         <div className="container mx-auto px-4 py-10">
           {family ? (
@@ -90,22 +89,22 @@ const Family = () => {
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                      {mockFamily.name}
+                      {family.name}
                     </h1>
                     <p className="mt-1 text-gray-600">
-                      {mockFamily.stats.members} members •{" "}
-                      {mockFamily.stats.stories} stories shared • Since{" "}
-                      {mockFamily.stats.since}
+                      {family.members.length || 0} members •{" "}
+                      {family.createdAt ? new Date(family.createdAt).getFullYear() : "Unknown"}
                     </p>
                   </div>
                 </div>
-
-                <div className="flex flex-wrap gap-3">
+                { user.role === "admin" &&
+                  <div className="flex flex-wrap gap-3">
+                
                   <Button
                     className="bg-[#A65E2E] text-white hover:bg-[#8e4f26]"
                     type="button"
                     onClick={handleOpenInvite}
-                  >
+                    >
                     <Mail className="h-4 w-4" />
                     Invite Member
                   </Button>
@@ -113,21 +112,29 @@ const Family = () => {
                     <ShieldCheck className="h-4 w-4" />
                     Manage Roles
                   </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowJoinRequests(true)}
+                    >
+                    Join Requests
+                  </Button>
                 </div>
+                  }
               </div>
 
               <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {mockFamily.members.map((member) => {
+                {family.members.map((member) => {
                   const roleStyles =
-                    member.role === "Admin"
+                    member.role === "admin"
                       ? "bg-[#A65E2E] text-white"
-                      : member.role === "Contributor"
+                      : member.role === "contributor"
                         ? "bg-[#E9E0D7] text-[#6b3f1f]"
                         : "bg-white text-gray-700 border border-gray-200";
                   const RoleIcon =
-                    member.role === "Admin"
+                    member.role === "admin"
                       ? Crown
-                      : member.role === "Contributor"
+                      : member.role === "contributor"
                         ? UserCheck
                         : ShieldCheck;
 
@@ -243,6 +250,46 @@ const Family = () => {
       {showInviteMember ? (
         <InviteMemberModal familyId={family?._id} onClose={handleCloseInvite} />
       ) : null}
+      <div
+        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${
+          showJoinRequests ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setShowJoinRequests(false)}
+      />
+      <aside
+        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md transform border-l border-[#eadfd2] bg-white shadow-xl transition-transform duration-300 sm:w-[420px] ${
+          showJoinRequests ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          <div className="border-b border-[#eadfd2] px-6 py-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8e4f26]">
+                  Admin Review
+                </p>
+                <h2 className="mt-2 text-xl font-semibold text-gray-900">
+                  Pending Join Requests
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  Approve or deny new members requesting access.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowJoinRequests(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+            <AdminApprovals familyId={family?._id} variant="panel" />
+          </div>
+        </div>
+      </aside>
     </>
   );
 };

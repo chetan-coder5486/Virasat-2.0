@@ -22,6 +22,7 @@ export const createFamily = async (req, res) => {
             members: [adminId]
         });
         userD.family = newFamily._id;
+        userD.role = 'admin'; // Update role to admin when creating a family
         await userD.save();
         return res.status(201).json({
             success: true,
@@ -44,7 +45,13 @@ export const deleteFamily = async (req, res) => {
 export const getFamilyDetails = async (req, res) => {
     const user = req.user.userId;
     try {
-        const userD = await User.findById(user).populate('family');
+        const userD = await User.findById(user).populate({
+            path: "family",
+                populate: {
+                    path: "members",
+                    select: "name email role"
+                }
+        });
         if (!userD) {
             return res.status(404).json({
                 success: false,

@@ -97,7 +97,8 @@ export async function joinWithToken(req, res) {
     await JoinRequest.create({
       familyId: invite.familyId,
       inviteId: invite._id,
-      requesterId: userId
+      requesterId: userId,
+      role: invite.role
     });
 
     // 6. Mark invite as used
@@ -144,6 +145,12 @@ export async function reviewRequest(req, res) {
       await Family.findByIdAndUpdate(request.familyId._id, {
         $addToSet: { members: request.requesterId._id }
       });
+      // Update user role and family
+      await User.findByIdAndUpdate(request.requesterId._id, {
+        family: request.familyId._id,
+        role: request.role || 'viewer' // default role for new members
+      });
+      // Send approval email
       await sendApprovalEmail({
         to: request.requesterId.email,
         familyName: request.familyId.name

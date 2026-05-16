@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 
-const AdminApprovals = ({ familyId }) => {
+const AdminApprovals = ({ familyId, variant = "page" }) => {
   const { api } = useAuth();
   const params = useParams();
   const resolvedFamilyId = useMemo(
@@ -62,6 +62,58 @@ const AdminApprovals = ({ familyId }) => {
     }
   };
 
+  const content = loading ? (
+    <div className="rounded-lg border border-gray-200 bg-white/80 p-6 text-sm text-gray-600">
+      Loading requests...
+    </div>
+  ) : error ? (
+    <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+      {error}
+    </div>
+  ) : requests.length === 0 ? (
+    <div className="rounded-lg border border-gray-200 bg-white/80 p-6 text-sm text-gray-600">
+      No pending requests.
+    </div>
+  ) : (
+    <div className="grid gap-4">
+      {requests.map((request) => (
+        <Card key={request._id} className="border-gray-200 bg-white">
+          <CardHeader>
+            <CardTitle>{request.requesterId?.name}</CardTitle>
+            <CardDescription>{request.requesterId?.email}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-gray-600">
+              Requested on {new Date(request.createdAt).toLocaleDateString()}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                className="bg-[#A65E2E] text-white hover:bg-[#8e4f26]"
+                onClick={() => handleDecision(request._id, "approved")}
+              >
+                <Check className="h-4 w-4" />
+                Approve
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleDecision(request._id, "denied")}
+              >
+                <X className="h-4 w-4" />
+                Deny
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  if (variant === "panel") {
+    return <div className="space-y-4">{content}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#f6f2ee]">
       <Navbar />
@@ -75,57 +127,7 @@ const AdminApprovals = ({ familyId }) => {
               Review new members requesting access to your family.
             </p>
           </div>
-
-          {loading ? (
-            <div className="rounded-lg border border-gray-200 bg-white/80 p-6 text-sm text-gray-600">
-              Loading requests...
-            </div>
-          ) : error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-600">
-              {error}
-            </div>
-          ) : requests.length === 0 ? (
-            <div className="rounded-lg border border-gray-200 bg-white/80 p-6 text-sm text-gray-600">
-              No pending requests.
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {requests.map((request) => (
-                <Card key={request._id} className="border-gray-200 bg-white">
-                  <CardHeader>
-                    <CardTitle>{request.requesterId?.name}</CardTitle>
-                    <CardDescription>
-                      {request.requesterId?.email}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="text-sm text-gray-600">
-                      Requested on{" "}
-                      {new Date(request.createdAt).toLocaleDateString()}
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      <Button
-                        type="button"
-                        className="bg-[#A65E2E] text-white hover:bg-[#8e4f26]"
-                        onClick={() => handleDecision(request._id, "approved")}
-                      >
-                        <Check className="h-4 w-4" />
-                        Approve
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleDecision(request._id, "denied")}
-                      >
-                        <X className="h-4 w-4" />
-                        Deny
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          {content}
         </div>
       </div>
     </div>

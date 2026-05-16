@@ -18,6 +18,10 @@ const familySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     }],
+    stories: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Story"
+    }]
 }, { timestamps: true });
 
 export const Family = mongoose.model("Family", familySchema);
