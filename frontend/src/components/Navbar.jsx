@@ -9,11 +9,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -86,6 +82,14 @@ const Navbar = () => {
           >
             Family
           </NavLink>
+          <NavLink
+            className={navClass({
+              isActive: window.location.pathname === "/circles",
+            })} 
+            to="/circles"
+          >
+            Circles
+          </NavLink>
         </div>
 
         {/* Desktop Action Buttons */}
@@ -116,9 +120,7 @@ const Navbar = () => {
               </PopoverTrigger>
               <PopoverContent align="end" className="w-48">
                 <PopoverHeader>
-                  <PopoverTitle className="text-sm">
-                    Account
-                  </PopoverTitle>
+                  <PopoverTitle className="text-sm">Account</PopoverTitle>
                 </PopoverHeader>
                 <Link
                   to="/profile"

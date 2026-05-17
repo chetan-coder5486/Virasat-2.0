@@ -6,6 +6,8 @@ const storySchema = new mongoose.Schema({
     date: { type: Date, required: true },
     tags: [{ type: String }],
     isMilestone: { type: Boolean, default: false },
+    circle: { type: mongoose.Schema.Types.ObjectId, ref: 'Circle', default: null },
+    family: { type: mongoose.Schema.Types.ObjectId, ref: 'Family', required: true },
     memoryFiles: [{ type: Object }], // Array of file URLs or paths
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });

@@ -6,6 +6,8 @@ import authRoutes from './routes/auth.route.js';
 import storyRoutes from './routes/story.route.js';
 import familyRoutes from './routes/family.route.js';
 import inviteRoutes from './routes/invite.route.js';
+import userRoutes from './routes/user.route.js'
+import circleRoutes from './routes/circle.route.js';
 import cors from 'cors';
 
 dotenv.config();
@@ -27,6 +29,9 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/story', storyRoutes); 
 app.use('/api/v1/family', familyRoutes); // New family routes
 app.use('/api/v1/invite', inviteRoutes); // New invite routes
+app.use('/api/v1/user', userRoutes); //   user routes 
+app.use('/api/v1/circle', circleRoutes); // New circle routes
+
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', message: 'API is healthy' });

@@ -9,8 +9,9 @@ const userSchema = new mongoose.Schema({
     tokenVersion:{            //to invalidate refresh tokens when user logs out or password changes
         type:Number,
         default:0
-    }
-    
+    },
+    bio: {type:String},
+    avatar: {type:String, default:"https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
 },{timestamps:true})
 
 // Increment token version (invalidates all refresh tokens)

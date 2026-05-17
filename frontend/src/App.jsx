@@ -9,12 +9,14 @@ import Stories from "./pages/Stories.jsx";
 import Family from "./pages/Family";
 import JoinFamily from "./pages/JoinFamily";
 import { ToastContainer } from "react-toastify";
+import Profile from "./pages/Profile.jsx";
+import { Circle } from "lucide-react";
+import Circles from "./pages/Circles";
 
 const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -43,8 +45,24 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/profile/"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/circles"
+            element={
+              <ProtectedRoute>
+                <Circles />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-        <ToastContainer/>
+        <ToastContainer />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -5,7 +5,7 @@ import { Story } from "../models/story.model.js";
 
 export const createStory = async (req, res) => {
   try {
-    const { title, description, date, tags, isMilestone, memoryFiles } = req.body;
+    const { title, description, date, tags, isMilestone, circle, memoryFiles } = req.body;
     const author = req.user.userId; // Assuming req.user is set by auth middleware
     const familyId = req.params.familyId; // Assuming user's family ID is available in req.user
 
@@ -23,10 +23,11 @@ export const createStory = async (req, res) => {
       date,
       tags,
       isMilestone,
+      circle,
+      family: familyId,
       memoryFiles,
       author
     });
-    family.stories.push(story._id);
     await family.save();
     return res.status(201).json({
         success: true,
@@ -42,23 +43,25 @@ export const createStory = async (req, res) => {
 export const getAllStoriesByFamily = async (req, res) => {
     try{
         const familyId = req.params.familyId; 
-        const family = await Family.findById(familyId).populate('stories');
+        const family = await Family.findById(familyId);
         if(!family){
             return res.status(404).json({
                 success: false,
                 message: "Family not found"
             })
         }
-        if(!family.stories){
+        const stories = await Story.find({ family: familyId }).populate('author', 'name avatar');
+        if(!stories){
             return res.status(404).json({
-                success: false,
-                message: "No stories found"
+                success: false, 
+                message: "No stories found for this family"
             })
         }
+        console.log(`Fetched ${stories.length} stories for family ${family.name}`);
         return res.status(200).json({
             success: true,
             message: "Stories retrieved successfully",
-            data: family.stories
+            data: stories
         })
     }catch(error){
         console.log("Error fetching stories:", error);
