@@ -1,74 +1,85 @@
+import { Circle } from "../models/circle.model.js";
 import { Family } from "../models/family.model.js";
 import { Story } from "../models/story.model.js";
+import { User } from "../models/user.model.js";
 
 // Post api/story/create
 
 export const createStory = async (req, res) => {
-  try {
-    const { title, description, date, tags, isMilestone, circle, memoryFiles } = req.body;
-    const author = req.user.userId; // Assuming req.user is set by auth middleware
-    const familyId = req.params.familyId; // Assuming user's family ID is available in req.user
-
-    if (!familyId) {
-        console.log("User is not part of any family. Cannot create story.");
-      return res.status(400).json({ message: "User is not part of any family" });
+    try {
+        const { title, description, date, tags, isMilestone, circle, memoryFiles } = req.body;
+        const author = req.user.userId; // Assuming req.user is set by auth middleware
+        const userD = await User.findById(author);
+        const familyId = userD.family;
+        if (!familyId) {
+            console.log("User is not part of any family. Cannot create story.");
+            return res.status(400).json({ message: "User is not part of any family" });
+        }
+        const family = await Family.findById(familyId);
+        if (!family) {
+            return res.status(404).json({ message: "Family not found" });
+        }
+        if (circle) {
+            const circleDoc = await Circle.findOne({ _id: circle, family });
+            if (!circleDoc) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Circle not found in user's family"
+                })
+            }
+            if (!circleDoc.members.includes(author)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "User is not a member of the specified circle"
+                })
+            }
+        }
+        const story = await Story.create({
+            title,
+            description,
+            date,
+            tags: Array.isArray(tags) ? tags : [],
+            isMilestone,
+            circle: circle || null,
+            family: familyId,
+            memoryFiles: Array.isArray(memoryFiles) ? memoryFiles : [],
+            author
+        });
+        return res.status(201).json({
+            success: true,
+            message: "Story created successfully",
+            data: story,
+        });
+    } catch (error) {
+        console.log("Error creating story:", error);
+        res.status(400).json({ message: error.message });
     }
-    const family = await Family.findById(familyId);
-    if (!family) {
-      return res.status(404).json({ message: "Family not found" });
-    }
-    const story = await Story.create({
-      title,
-      description,
-      date,
-      tags,
-      isMilestone,
-      circle,
-      family: familyId,
-      memoryFiles,
-      author
-    });
-    await family.save();
-    return res.status(201).json({
-        success: true,
-        message: "Story created successfully",
-    });
-  } catch (error) {
-    console.log("Error creating story:", error);
-    res.status(400).json({ message: error.message });
-  }
 };
 
 
-export const getAllStoriesByFamily = async (req, res) => {
-    try{
-        const familyId = req.params.familyId; 
-        const family = await Family.findById(familyId);
-        if(!family){
-            return res.status(404).json({
-                success: false,
-                message: "Family not found"
-            })
-        }
-        const stories = await Story.find({ family: familyId }).populate('author', 'name avatar');
-        if(!stories){
-            return res.status(404).json({
-                success: false, 
-                message: "No stories found for this family"
-            })
-        }
-        console.log(`Fetched ${stories.length} stories for family ${family.name}`);
+export const getAllStories = async (req, res) => {
+    try {
+
+        const user = req.user.userId;
+        const userD = await User.findById(user);
+        const familyId = userD.family;
+        const { circleId } = req.query; // optional
+
+        const filter = circleId
+            ? { family: familyId, circle: circleId }
+            : { family: familyId, circle: null };
+        const stories = await Story.find(filter)
+            .populate("author", "name avatar")
+            .sort({ date: -1 });
         return res.status(200).json({
             success: true,
             message: "Stories retrieved successfully",
             data: stories
-        })
-    }catch(error){
-        console.log("Error fetching stories:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Error fetching stories" 
         });
+    } catch (err) {
+        console.log("Error fetching stories:", err);
+        return res.status(500).json({ message: err.message });
     }
-}
+};
+
 

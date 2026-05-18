@@ -7,7 +7,7 @@ const StoryCard = ({
   excerpt,
   author,
   date,
-  tags,
+  tags = [],
   imageUrl,
   likes,
   comments,
@@ -43,26 +43,30 @@ const StoryCard = ({
               : ""}
           </span>
           <span className="text-border">•</span>
-          <span>{author}</span>
+          <span>{author?.name}</span>
         </div>
         <h3 className="mb-2 font-display text-lg font-semibold text-card-foreground transition-colors group-hover:text-primary">
           {title}
         </h3>
-        <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
-          {excerpt}
-        </p>
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {tags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-xs font-normal"
-            >
-              <Tag className="mr-1 h-3 w-3" />
-              {tag}
-            </Badge>
-          ))}
-        </div>
+        {excerpt ? (
+          <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+            {excerpt}
+          </p>
+        ) : null}
+        {tags.length > 0 ? (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {tags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="text-xs font-normal"
+              >
+                <Tag className="mr-1 h-3 w-3" />
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Heart className="h-3.5 w-3.5" />

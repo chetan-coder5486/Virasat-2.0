@@ -9,18 +9,15 @@ import { Search, Filter, Grid3X3, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/context/AuthContext";
+import { useStories } from "@/hooks/useStories";
 
 const Stories = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
-  const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { stories, loading, error } = useStories();
   const location = useLocation();
   const navigate = useNavigate();
-  const { api,user } = useAuth();
 
   useEffect(() => {
     if (location.state?.openUpload) {
@@ -29,53 +26,11 @@ const Stories = () => {
     }
   }, [location.state, navigate]);
 
-  useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        setLoading(true);
-        const familyId = user?.family;
-        if(!familyId){
-          setError("User is not part of any family.");
-          setLoading(false);
-          return;
-        }
-        const response = await api.get(`/story/${familyId}`);
-        const items = response.data?.stories || response.data.data || [];
-        const normalized = items.map((story) => ({
-          id: story._id || story.id || story.slug || story.title,
-          title: story.title || "Untitled",
-          excerpt: story.description || story.story || "",
-          description: story.description || story.story || "",
-          author:
-            story.author?.name || story.authorName || story.author || "Unknown",
-          date: story.date || "",
-          tags: Array.isArray(story.tags) ? story.tags : [],
-          memoryFiles: Array.isArray(story.memoryFiles)
-            ? story.memoryFiles
-            : [],
-          likes: story.likesCount || story.likes?.length || 0,
-          comments: story.commentsCount || story.comments?.length || 0,
-          imageUrl:
-            story.coverImage || story.imageUrl || story.memoryFiles?.[0]?.url,
-        }));
-        console.log("Fetched stories:", normalized);
-        setStories(normalized);
-        setError("");
-      } catch (err) {
-        console.error("Failed to fetch stories:", err);
-        setError("Failed to load stories.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStories();
-  }, [api]);
 
   const allTags = useMemo(() => {
     const tags = new Set();
     stories.forEach((story) => {
-      story.tags.forEach((tag) => tags.add(tag));
+      (story.tags || []).forEach((tag) => tags.add(tag));
     });
     return Array.from(tags);
   }, [stories]);

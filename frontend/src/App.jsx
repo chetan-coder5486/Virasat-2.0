@@ -5,7 +5,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { AuthProvider } from "@/context/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Stories from "./pages/Stories.jsx";
+import Stories from "./pages/FamilyStories.jsx";
 import Family from "./pages/Family";
 import JoinFamily from "./pages/JoinFamily";
 import { ToastContainer } from "react-toastify";

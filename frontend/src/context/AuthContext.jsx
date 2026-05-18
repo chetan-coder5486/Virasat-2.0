@@ -18,6 +18,8 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [family, setFamily] = useState(null);
+  const [circles, setCircles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
 
@@ -131,7 +133,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       return { success: true };
     } catch (error) {
-      console.table(error.response)
+      console.table(error.response);
       toast.error(error.response?.data?.message || "Registration failed", {
         position: "top-right",
         autoClose: 5000,
@@ -179,8 +181,21 @@ export const AuthProvider = ({ children }) => {
         const userResponse = await axios.get(`${API_BASE_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${data.accessToken}` },
         });
+        const familyResponse = await axios.get(`${API_BASE_URL}/family/`, {
+          headers: { Authorization: `Bearer ${data.accessToken}` },
+        });
+        const circlesResponse = await axios.get(
+          `${API_BASE_URL}/circle/my-circles`,
+          {
+            headers: { Authorization: `Bearer ${data.accessToken}` },
+          },
+        );
+        console.log("✅ Family data loaded:", familyResponse.data.family);
         console.log("✅ User data loaded:", userResponse.data.user);
+        console.log("✅ Circles data loaded:", circlesResponse.data.circles);
+        setFamily(familyResponse.data.family);
         setUser(userResponse.data.user);
+        setCircles(circlesResponse.data.circles);
       } catch (error) {
         console.log("ℹ️ No valid session found");
       } finally {
@@ -197,6 +212,8 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     api,
+    family,
+    circles,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
