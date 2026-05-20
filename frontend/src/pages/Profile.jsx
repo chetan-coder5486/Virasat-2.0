@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { Camera, Save } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
@@ -14,17 +15,22 @@ const Profile = () => {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarInput, setAvatarInput] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [avatarMessage, setAvatarMessage] = useState("");
+  const [avatarError, setAvatarError] = useState("");
+
+  const uploadPreset = "family_trunk_uploads";
 
   const defaultAvatar = useMemo(
     () =>
       "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' rx='48' fill='%23F0E7DD'/><circle cx='48' cy='38' r='16' fill='%23D8C6B6'/><path d='M24 84c6-16 26-22 24-22s18 6 24 22' fill='%23D8C6B6'/></svg>",
-    []
+    [],
   );
 
   useEffect(() => {
@@ -54,6 +60,14 @@ const Profile = () => {
 
     fetchProfile();
   }, [api, user?._id]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
 
   const initials = useMemo(() => {
     if (!name) return "FT";
@@ -85,13 +99,54 @@ const Profile = () => {
   const handleAvatarSave = async (event) => {
     event.preventDefault();
     setAvatarMessage("");
+    setAvatarError("");
+
+    if (!avatarFile) {
+      setAvatarError("Select an image to upload.");
+      return;
+    }
 
     try {
       setAvatarSaving(true);
+      const signatureResponse = await api.post("/user/cloudinary-signature", {
+        uploadPreset,
+        resourceType: "image",
+      });
+      const { signature, timestamp, apiKey, cloudName } =
+        signatureResponse.data || {};
+      console.log("Cloudinary signature response:", signatureResponse.data);
+      if (!signature || !timestamp || !apiKey || !cloudName) {
+        setAvatarError("Unable to prepare upload right now.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", avatarFile);
+      formData.append("api_key", apiKey);
+      formData.append("timestamp", timestamp);
+      formData.append("signature", signature);
+      formData.append("upload_preset", uploadPreset);
+
+      const uploadResult = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        formData,
+      );
+      const avatarUrl = uploadResult.data?.secure_url;
+
+      if (!avatarUrl) {
+        setAvatarError("Unable to upload photo right now.");
+        return;
+      }
       const response = await api.put("/user/profile/picture", {
-        avatar: avatarInput,
+        avatar: avatarUrl,
       });
       setProfile(response.data?.user || profile);
+      setAvatarInput(avatarUrl);
+      setAvatarFile(null);
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+      setAvatarPreview("");
       setAvatarMessage("Profile photo updated.");
     } catch (err) {
       console.error("Failed to update profile photo:", err);
@@ -140,7 +195,9 @@ const Profile = () => {
                       <div className="flex flex-col items-center gap-4">
                         <Avatar size="lg" className="h-20 w-20">
                           <AvatarImage
-                            src={profile?.avatar || defaultAvatar}
+                            src={
+                              avatarPreview || profile?.avatar || defaultAvatar
+                            }
                             alt="Profile"
                           />
                           <AvatarFallback>{initials}</AvatarFallback>
@@ -160,14 +217,23 @@ const Profile = () => {
                         className="mt-6 space-y-3"
                       >
                         <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                          Image URL
+                          Upload image
                         </label>
                         <Input
-                          value={avatarInput}
-                          onChange={(event) =>
-                            setAvatarInput(event.target.value)
-                          }
-                          placeholder="https://..."
+                          type="file"
+                          accept="image/*"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0] || null;
+                            setAvatarFile(file);
+                            setAvatarMessage("");
+                            setAvatarError("");
+                            if (avatarPreview) {
+                              URL.revokeObjectURL(avatarPreview);
+                            }
+                            setAvatarPreview(
+                              file ? URL.createObjectURL(file) : "",
+                            );
+                          }}
                         />
                         <Button
                           type="submit"
@@ -177,6 +243,9 @@ const Profile = () => {
                           <Camera className="h-4 w-4" />
                           {avatarSaving ? "Saving..." : "Update photo"}
                         </Button>
+                        {avatarError ? (
+                          <p className="text-xs text-red-600">{avatarError}</p>
+                        ) : null}
                         {avatarMessage ? (
                           <p className="text-xs text-gray-600">
                             {avatarMessage}

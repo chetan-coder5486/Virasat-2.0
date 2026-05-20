@@ -2,15 +2,31 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
-import { Loader2, Upload, X, Plus, Star, Calendar, Tag, FileText, Image } from "lucide-react";
+import {
+  Loader2,
+  Upload,
+  X,
+  Plus,
+  Star,
+  Calendar,
+  Tag,
+  FileText,
+  Image,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const UPLOAD_PRESET = "family_trunk_uploads";
+const SIGNATURE_ENDPOINT = "/user/cloudinary-signature";
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
 
 const initials = (name = "") =>
-  name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
 const wordCount = (str) =>
   str.trim() === "" ? 0 : str.trim().split(/\s+/).length;
@@ -75,13 +91,15 @@ function StepDot({ active, done, label, number }) {
           done
             ? "bg-[#A65E2E] text-white"
             : active
-            ? "bg-[#A65E2E]/15 text-[#A65E2E] ring-2 ring-[#A65E2E]"
-            : "bg-[#F0E6D9] text-[#C4A882]"
+              ? "bg-[#A65E2E]/15 text-[#A65E2E] ring-2 ring-[#A65E2E]"
+              : "bg-[#F0E6D9] text-[#C4A882]"
         }`}
       >
         {done ? "✓" : number}
       </div>
-      <span className={`text-[10px] font-medium ${active || done ? "text-[#A65E2E]" : "text-[#C4A882]"}`}>
+      <span
+        className={`text-[10px] font-medium ${active || done ? "text-[#A65E2E]" : "text-[#C4A882]"}`}
+      >
         {label}
       </span>
     </div>
@@ -90,7 +108,12 @@ function StepDot({ active, done, label, number }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export const UploadMemoryModal = ({ onClose, onCreated, circleId = null, circleName = null }) => {
+export const UploadMemoryModal = ({
+  onClose,
+  onCreated,
+  circleId = null,
+  circleName = null,
+}) => {
   const { api, user } = useAuth();
   const todayStr = new Date().toISOString().slice(0, 10);
   const isCircleStory = Boolean(circleId);
@@ -112,7 +135,9 @@ export const UploadMemoryModal = ({ onClose, onCreated, circleId = null, circleN
 
   const mediaRef = useRef([]);
 
-  useEffect(() => { mediaRef.current = uploadedMedia; }, [uploadedMedia]);
+  useEffect(() => {
+    mediaRef.current = uploadedMedia;
+  }, [uploadedMedia]);
   useEffect(() => () => cleanupPreviews(mediaRef.current), []);
 
   const cleanupPreviews = (list) =>
@@ -123,15 +148,19 @@ export const UploadMemoryModal = ({ onClose, onCreated, circleId = null, circleN
   const validate = () => {
     const errs = {};
     if (!title.trim()) errs.title = "Title is required.";
-    else if (wordCount(title) > 100) errs.title = `Max 100 words (${wordCount(title)} used).`;
-    if (story && wordCount(story) > 500) errs.story = `Max 500 words (${wordCount(story)} used).`;
+    else if (wordCount(title) > 100)
+      errs.title = `Max 100 words (${wordCount(title)} used).`;
+    if (story && wordCount(story) > 500)
+      errs.story = `Max 500 words (${wordCount(story)} used).`;
     if (!date) errs.date = "Date is required.";
-    else if (new Date(date) > new Date(todayStr)) errs.date = "Date cannot be in the future.";
+    else if (new Date(date) > new Date(todayStr))
+      errs.date = "Date cannot be in the future.";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const canProceed = title.trim() && date && !errors.title && !errors.date && !errors.story;
+  const canProceed =
+    title.trim() && date && !errors.title && !errors.date && !errors.story;
 
   // ── Dropzone ────────────────────────────────────────────────────────────────
 
@@ -146,31 +175,49 @@ export const UploadMemoryModal = ({ onClose, onCreated, circleId = null, circleN
     setUploadedMedia((prev) => [...prev, ...newMedia]);
   }, []);
 
-const { getRootProps, getInputProps, isDragActive, inputRef } = useDropzone({
-  onDrop,
-  multiple: true,
-  accept: { "image/*": [], "video/*": [] },
-});
+  const { getRootProps, getInputProps, isDragActive, inputRef } = useDropzone({
+    onDrop,
+    multiple: true,
+    accept: { "image/*": [], "video/*": [] },
+  });
 
-const removeMedia = (index) => {
-  URL.revokeObjectURL(uploadedMedia[index]?.previewUrl);
-  setUploadedMedia((prev) => prev.filter((_, i) => i !== index));
-  if (inputRef.current) inputRef.current.value = "";
-};
+  const removeMedia = (index) => {
+    URL.revokeObjectURL(uploadedMedia[index]?.previewUrl);
+    setUploadedMedia((prev) => prev.filter((_, i) => i !== index));
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
   // ── Upload to Cloudinary ────────────────────────────────────────────────────
 
+  const getCloudinarySignature = async (resourceType) => {
+    const response = await api.post(SIGNATURE_ENDPOINT, {
+      uploadPreset: UPLOAD_PRESET,
+      resourceType,
+    });
+    return response.data;
+  };
+
   const uploadToCloudinary = async (file, onProgress) => {
     const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", UPLOAD_PRESET);
     const resourceType = file.type.startsWith("video") ? "video" : "image";
+    const { signature, timestamp, apiKey, cloudName } =
+      await getCloudinarySignature(resourceType);
+
+    fd.append("file", file);
+    fd.append("api_key", apiKey);
+    fd.append("timestamp", timestamp);
+    fd.append("signature", signature);
+    fd.append("upload_preset", UPLOAD_PRESET);
     const res = await axios.post(
-      `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_NAME}/${resourceType}/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName || import.meta.env.VITE_CLOUDINARY_NAME}/${resourceType}/upload`,
       fd,
-      { onUploadProgress: (e) => onProgress?.(e.loaded, e.total) }
+      { onUploadProgress: (e) => onProgress?.(e.loaded, e.total) },
     );
-    return { url: res.data.secure_url, type: resourceType, publicId: res.data.public_id };
+    return {
+      url: res.data.secure_url,
+      type: resourceType,
+      publicId: res.data.public_id,
+    };
   };
 
   // ── Submit ──────────────────────────────────────────────────────────────────
@@ -183,14 +230,17 @@ const removeMedia = (index) => {
       setUploading(true);
       setUploadProgress(0);
 
-      const totalBytes = uploadedMedia.reduce((s, m) => s + (m.file?.size || 0), 0) || 1;
+      const totalBytes =
+        uploadedMedia.reduce((s, m) => s + (m.file?.size || 0), 0) || 1;
       let uploadedBytes = 0;
       const uploadedFiles = [];
 
       for (const media of uploadedMedia) {
         setCurrentFileLabel(media.name);
         const result = await uploadToCloudinary(media.file, (loaded) => {
-          setUploadProgress(Math.round(((uploadedBytes + loaded) / totalBytes) * 100));
+          setUploadProgress(
+            Math.round(((uploadedBytes + loaded) / totalBytes) * 100),
+          );
         });
         uploadedBytes += media.file?.size || 0;
         setUploadProgress(Math.round((uploadedBytes / totalBytes) * 100));
@@ -203,7 +253,7 @@ const removeMedia = (index) => {
         date,
         tags,
         isMilestone,
-        circle: circleId,     // null = family-wide, id = circle story
+        circle: circleId, // null = family-wide, id = circle story
         memoryFiles: uploadedFiles,
       };
 
@@ -213,7 +263,10 @@ const removeMedia = (index) => {
       onClose();
     } catch (err) {
       console.error("Failed to create memory:", err);
-      setErrors((prev) => ({ ...prev, submit: err.response?.data?.message || "Failed to save memory." }));
+      setErrors((prev) => ({
+        ...prev,
+        submit: err.response?.data?.message || "Failed to save memory.",
+      }));
     } finally {
       setUploading(false);
     }
@@ -274,16 +327,25 @@ const removeMedia = (index) => {
 
         {/* Step indicator */}
         <div className="flex items-center justify-center gap-0 px-6 pb-4">
-          <StepDot number={1} label="Details" active={step === 1} done={step > 1} />
-          <div className={`mb-4 h-px w-12 transition-colors duration-300 ${step > 1 ? "bg-[#A65E2E]" : "bg-[#D9B99A]"}`} />
+          <StepDot
+            number={1}
+            label="Details"
+            active={step === 1}
+            done={step > 1}
+          />
+          <div
+            className={`mb-4 h-px w-12 transition-colors duration-300 ${step > 1 ? "bg-[#A65E2E]" : "bg-[#D9B99A]"}`}
+          />
           <StepDot number={2} label="Media" active={step === 2} done={false} />
         </div>
 
         {/* Scrollable body */}
-        <div className="overflow-y-auto px-6 pb-6" style={{ maxHeight: "calc(100dvh - 13rem)" }}>
+        <div
+          className="overflow-y-auto px-6 pb-6"
+          style={{ maxHeight: "calc(100dvh - 13rem)" }}
+        >
           <form onSubmit={handleSubmit}>
             <AnimatePresence mode="wait">
-
               {/* ── STEP 1: Details ── */}
               {step === 1 && (
                 <motion.div
@@ -303,14 +365,21 @@ const removeMedia = (index) => {
                       onChange={(e) => {
                         setTitle(e.target.value);
                         if (wordCount(e.target.value) > 100)
-                          setErrors((p) => ({ ...p, title: `Max 100 words (${wordCount(e.target.value)} used).` }));
+                          setErrors((p) => ({
+                            ...p,
+                            title: `Max 100 words (${wordCount(e.target.value)} used).`,
+                          }));
                         else setErrors((p) => ({ ...p, title: "" }));
                       }}
                       placeholder="e.g. Dad's first motorcycle, 1972"
                       className="w-full rounded-xl border border-[#D9B99A] bg-[#FDF6EE] px-4 py-2.5 text-sm text-[#4A2C14] placeholder-[#C4A882] outline-none transition-all focus:border-[#A65E2E] focus:ring-1 focus:ring-[#A65E2E]/30"
                       required
                     />
-                    {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
+                    {errors.title && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.title}
+                      </p>
+                    )}
                   </div>
 
                   {/* Date */}
@@ -326,20 +395,29 @@ const removeMedia = (index) => {
                         setDate(e.target.value);
                         setErrors((p) => ({
                           ...p,
-                          date: new Date(e.target.value) > new Date(todayStr) ? "Date cannot be in the future." : "",
+                          date:
+                            new Date(e.target.value) > new Date(todayStr)
+                              ? "Date cannot be in the future."
+                              : "",
                         }));
                       }}
                       className="w-full rounded-xl border border-[#D9B99A] bg-[#FDF6EE] px-4 py-2.5 text-sm text-[#4A2C14] outline-none transition-all focus:border-[#A65E2E] focus:ring-1 focus:ring-[#A65E2E]/30"
                       required
                     />
-                    {errors.date && <p className="mt-1 text-xs text-red-500">{errors.date}</p>}
+                    {errors.date && (
+                      <p className="mt-1 text-xs text-red-500">{errors.date}</p>
+                    )}
                   </div>
 
                   {/* Story */}
                   <div>
                     <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#9E7A56]">
-                      <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> Story</span>
-                      <span className="normal-case font-normal text-[#C4A882]">{wordCount(story)} / 500 words</span>
+                      <span className="flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5" /> Story
+                      </span>
+                      <span className="normal-case font-normal text-[#C4A882]">
+                        {wordCount(story)} / 500 words
+                      </span>
                     </label>
                     <textarea
                       value={story}
@@ -353,7 +431,11 @@ const removeMedia = (index) => {
                       placeholder="Tell the story behind this memory… what happened, who was there, how it felt."
                       className="w-full resize-none rounded-xl border border-[#D9B99A] bg-[#FDF6EE] px-4 py-2.5 text-sm text-[#4A2C14] placeholder-[#C4A882] outline-none transition-all focus:border-[#A65E2E] focus:ring-1 focus:ring-[#A65E2E]/30"
                     />
-                    {errors.story && <p className="mt-1 text-xs text-red-500">{errors.story}</p>}
+                    {errors.story && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.story}
+                      </p>
+                    )}
                   </div>
 
                   {/* Tags */}
@@ -378,11 +460,19 @@ const removeMedia = (index) => {
                       className={`h-5 w-5 flex-shrink-0 transition-colors ${isMilestone ? "fill-[#E8B86D] text-[#E8B86D]" : "text-[#C4A882]"}`}
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-[#4A2C14]">Mark as milestone</p>
-                      <p className="text-xs text-[#9E7A56]">Highlighted on the family timeline</p>
+                      <p className="text-sm font-medium text-[#4A2C14]">
+                        Mark as milestone
+                      </p>
+                      <p className="text-xs text-[#9E7A56]">
+                        Highlighted on the family timeline
+                      </p>
                     </div>
-                    <div className={`h-5 w-9 rounded-full transition-colors duration-200 ${isMilestone ? "bg-[#A65E2E]" : "bg-[#D9B99A]"}`}>
-                      <div className={`mt-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${isMilestone ? "translate-x-4" : "translate-x-0.5"}`} />
+                    <div
+                      className={`h-5 w-9 rounded-full transition-colors duration-200 ${isMilestone ? "bg-[#A65E2E]" : "bg-[#D9B99A]"}`}
+                    >
+                      <div
+                        className={`mt-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${isMilestone ? "translate-x-4" : "translate-x-0.5"}`}
+                      />
                     </div>
                   </button>
 
@@ -390,7 +480,9 @@ const removeMedia = (index) => {
                   <button
                     type="button"
                     disabled={!canProceed}
-                    onClick={() => { if (validate()) setStep(2); }}
+                    onClick={() => {
+                      if (validate()) setStep(2);
+                    }}
                     className="w-full rounded-xl bg-[#A65E2E] py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
                     Next — Add Photos & Videos
@@ -410,11 +502,15 @@ const removeMedia = (index) => {
                   {/* Summary pill */}
                   <div className="flex items-center gap-2 rounded-xl bg-[#F0E6D9] px-4 py-2.5">
                     <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#4A2C14]">{title}</p>
+                      <p className="truncate text-sm font-semibold text-[#4A2C14]">
+                        {title}
+                      </p>
                       <p className="text-xs text-[#9E7A56]">
                         {date}
                         {isMilestone ? " · ⭐ Milestone" : ""}
-                        {isCircleStory ? ` · ${circleName ?? "Circle"}` : " · Family"}
+                        {isCircleStory
+                          ? ` · ${circleName ?? "Circle"}`
+                          : " · Family"}
                       </p>
                     </div>
                     <button
@@ -436,18 +532,25 @@ const removeMedia = (index) => {
                     }`}
                   >
                     <input {...getInputProps()} />
-                    <Upload className={`mx-auto mb-2 h-8 w-8 transition-colors ${isDragActive ? "text-[#A65E2E]" : "text-[#C4A882]"}`} />
+                    <Upload
+                      className={`mx-auto mb-2 h-8 w-8 transition-colors ${isDragActive ? "text-[#A65E2E]" : "text-[#C4A882]"}`}
+                    />
                     <p className="text-sm font-medium text-[#4A2C14]">
-                      {isDragActive ? "Drop them here" : "Drag photos & videos here"}
+                      {isDragActive
+                        ? "Drop them here"
+                        : "Drag photos & videos here"}
                     </p>
-                    <p className="mt-1 text-xs text-[#9E7A56]">or click to browse your device</p>
+                    <p className="mt-1 text-xs text-[#9E7A56]">
+                      or click to browse your device
+                    </p>
                   </div>
 
                   {/* Media grid */}
                   {uploadedMedia.length > 0 && (
                     <div>
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#9E7A56]">
-                        {uploadedMedia.length} file{uploadedMedia.length > 1 ? "s" : ""} selected
+                        {uploadedMedia.length} file
+                        {uploadedMedia.length > 1 ? "s" : ""} selected
                       </p>
                       <div className="grid grid-cols-3 gap-2">
                         {uploadedMedia.map((media, i) => (
@@ -458,9 +561,16 @@ const removeMedia = (index) => {
                             className="group relative aspect-square overflow-hidden rounded-xl border border-[#D9B99A] bg-[#F0E6D9]"
                           >
                             {media.type === "video" ? (
-                              <video src={media.previewUrl} className="h-full w-full object-cover" />
+                              <video
+                                src={media.previewUrl}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
-                              <img src={media.previewUrl} alt="" className="h-full w-full object-cover" />
+                              <img
+                                src={media.previewUrl}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
                             )}
                             <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/30" />
                             <button
@@ -495,8 +605,12 @@ const removeMedia = (index) => {
                   {uploading && (
                     <div className="rounded-xl bg-[#FDF0E3] p-3">
                       <div className="mb-1.5 flex items-center justify-between">
-                        <p className="text-xs text-[#9E7A56] truncate">{currentFileLabel}</p>
-                        <p className="text-xs font-semibold text-[#A65E2E]">{uploadProgress}%</p>
+                        <p className="text-xs text-[#9E7A56] truncate">
+                          {currentFileLabel}
+                        </p>
+                        <p className="text-xs font-semibold text-[#A65E2E]">
+                          {uploadProgress}%
+                        </p>
                       </div>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#D9B99A]">
                         <motion.div
@@ -509,7 +623,9 @@ const removeMedia = (index) => {
                   )}
 
                   {errors.submit && (
-                    <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{errors.submit}</p>
+                    <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">
+                      {errors.submit}
+                    </p>
                   )}
 
                   {/* Footer buttons */}

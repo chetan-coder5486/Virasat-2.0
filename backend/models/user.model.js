@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
         default:0
     },
     bio: {type:String},
-    avatar: {type:String, default:"https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
+    avatar: {type:String, default:""}
 },{timestamps:true})
 
 // Increment token version (invalidates all refresh tokens)
