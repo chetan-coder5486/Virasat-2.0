@@ -103,6 +103,7 @@ export const loginUser = async (req, res) => {
 export const refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken
+        console.log("Received refresh token:", refreshToken)
         if (!refreshToken) {
             return res.status(401).json({
                 success: false,

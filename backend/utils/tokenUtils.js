@@ -59,7 +59,7 @@ export const sendRefreshToken = (res, token) => {
 }
 
 export const clearRefreshToken = (res) => {
-    res.clearCookie('refreshToken', '', {
+    res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
