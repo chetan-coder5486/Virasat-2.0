@@ -145,7 +145,15 @@ const Family = () => {
                     >
                       <CardContent className="flex flex-col items-center gap-3 py-8">
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#efe7dd] text-2xl">
-                          {member.emoji}
+                          {member.avatar ? (
+                            <img
+                              src={member.avatar}
+                              alt={member.name}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            member.name.charAt(0)
+                          )}
                         </div>
                         <div>
                           <p className="text-lg font-semibold text-gray-900">

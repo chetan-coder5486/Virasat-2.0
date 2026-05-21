@@ -14,6 +14,7 @@ import {
   Image,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const UPLOAD_PRESET = "family_trunk_uploads";
 const SIGNATURE_ENDPOINT = "/user/cloudinary-signature";
@@ -114,7 +115,10 @@ export const UploadMemoryModal = ({
   circleId = null,
   circleName = null,
 }) => {
-  const { api, user } = useAuth();
+  const { api } = useAuth();
+
+  const queryClient = useQueryClient();
+
   const todayStr = new Date().toISOString().slice(0, 10);
   const isCircleStory = Boolean(circleId);
 
@@ -259,6 +263,9 @@ export const UploadMemoryModal = ({
 
       const res = await api.post("/story/create", payload);
       cleanupPreviews(uploadedMedia);
+      queryClient.invalidateQueries({
+        queryKey: ["stories", circleId ?? "family"],
+      });
       if (onCreated) onCreated(res.data);
       onClose();
     } catch (err) {

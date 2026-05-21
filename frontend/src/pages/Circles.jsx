@@ -26,6 +26,7 @@ const Circles = () => {
   const getCircleId = (circle) => circle?._id || circle?.id;
 
   useEffect(() => {
+    console.log("Circles data:", circles);
     if (!activeCircleId && normalizedCircles.length > 0) {
       setActiveCircleId(getCircleId(normalizedCircles[0]));
       return;
@@ -202,6 +203,9 @@ const Circles = () => {
                           onClick={() => setShowUploadMemory(true)}
                         >
                           Share Story
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => alert("View members coming soon!")}>
+                          View Members
                         </Button>
                       </div>
                     </div>

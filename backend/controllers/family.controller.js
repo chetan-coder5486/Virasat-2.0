@@ -49,7 +49,7 @@ export const getFamilyDetails = async (req, res) => {
             path: "family",
                 populate: {
                     path: "members",
-                    select: "name email role"
+                    select: "name email avatar role"
                 }
         });
         if (!userD) {
