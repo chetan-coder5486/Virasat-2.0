@@ -31,6 +31,26 @@ export const getCloudinarySignature = (req, res) => {
   });
 };
 
+export const cleanUpCloudinaryResources = async (req,res) => {
+  try {
+    const { publicIds } = req.body; // Expecting an array of public IDs to delete
+        if (!publicIds?.length) {
+      return res.status(400).json({ message: "No publicIds provided" });
+    }
+
+    // Delete all in parallel
+    await Promise.all(
+      publicIds.map((publicId) =>
+        cloudinary.uploader.destroy(publicId)
+      )
+    );
+
+    return res.json({ success: true, deleted: publicIds.length });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 export const getUserProfile = async (req, res) => {
     try {
         const userId = req.params.id

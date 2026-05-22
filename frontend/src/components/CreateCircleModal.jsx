@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Users, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 
 const CreateCircleModal = ({ onClose, onCreated }) => {
-  const { api,family } = useAuth();
+  const { api, family } = useAuth();
+  const queryClient = useQueryClient();
   const [circleName, setCircleName] = useState("");
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -59,6 +61,7 @@ const CreateCircleModal = ({ onClose, onCreated }) => {
         members: Array.from(selectedIds),
       };
       const response = await api.post("/circle/create", payload);
+      queryClient.invalidateQueries({ queryKey: ["circles"] });
       if (onCreated) onCreated(response.data);
       handleClose();
     } catch (err) {

@@ -15,6 +15,9 @@ const Stories = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState(new Set());
+  const [showFilters, setShowFilters] = useState(true);
   const { stories, loading, error } = useStories();
   const location = useLocation();
   const navigate = useNavigate();
@@ -26,7 +29,6 @@ const Stories = () => {
     }
   }, [location.state, navigate]);
 
-
   const allTags = useMemo(() => {
     const tags = new Set();
     stories.forEach((story) => {
@@ -34,6 +36,49 @@ const Stories = () => {
     });
     return Array.from(tags);
   }, [stories]);
+
+  const filteredStories = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return stories.filter((story) => {
+      const authorText =
+        typeof story.author === "string"
+          ? story.author
+          : story.author?.name || story.author?.email || "";
+      const haystack = [
+        story.title,
+        story.excerpt,
+        authorText,
+        ...(story.tags || []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesTerm = term ? haystack.includes(term) : true;
+      const matchesTags = selectedTags.size
+        ? (story.tags || []).some((tag) => selectedTags.has(tag))
+        : true;
+
+      return matchesTerm && matchesTags;
+    });
+  }, [stories, searchTerm, selectedTags]);
+
+  const toggleTag = (tag) => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) {
+        next.delete(tag);
+      } else {
+        next.add(tag);
+      }
+      return next;
+    });
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedTags(new Set());
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,9 +110,18 @@ const Stories = () => {
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-[240px] max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search stories..." className="pl-10" />
+              <Input
+                placeholder="Search stories..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
             </div>
-            <Button variant="outline" className="gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setShowFilters((prev) => !prev)}
+            >
               <Filter className="h-4 w-4" /> Filter
             </Button>
             <Button variant="outline" size="icon">
@@ -77,17 +131,31 @@ const Stories = () => {
               <List className="h-4 w-4" />
             </Button>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {allTags.map((tag) => (
+          {showFilters && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <Badge
-                key={tag}
                 variant="outline"
-                className="cursor-pointer hover:bg-secondary"
+                className={`cursor-pointer hover:bg-secondary ${
+                  selectedTags.size === 0 ? "bg-secondary" : ""
+                }`}
+                onClick={clearFilters}
               >
-                {tag}
+                All
               </Badge>
-            ))}
-          </div>
+              {allTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className={`cursor-pointer hover:bg-secondary ${
+                    selectedTags.has(tag) ? "bg-secondary" : ""
+                  }`}
+                  onClick={() => toggleTag(tag)}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </motion.div>
         {loading ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
@@ -99,9 +167,13 @@ const Stories = () => {
           <div className="py-12 text-center text-sm text-muted-foreground">
             No stories yet. Create your first memory.
           </div>
+        ) : filteredStories.length === 0 ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            No stories match your filters.
+          </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {stories.map((story, i) => (
+            {filteredStories.map((story, i) => (
               <StoryCard
                 key={story.id}
                 {...story}

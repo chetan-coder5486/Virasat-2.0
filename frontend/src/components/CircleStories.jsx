@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useStories } from "@/hooks/useStories";
 
 const CircleStories = ({ circleId, viewMode = "scrapbook", onAddStory }) => {
-  const { stories, loading, error } = useStories(circleId);
+  const { stories, loading, error } = useStories(circleId, {
+    enabled: Boolean(circleId),
+  });
 
   if (!circleId) {
     return (

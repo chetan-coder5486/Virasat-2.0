@@ -12,6 +12,7 @@ import { ToastContainer } from "react-toastify";
 import Profile from "./pages/Profile.jsx";
 import { Circle } from "lucide-react";
 import Circles from "./pages/Circles";
+import Timeline from "./pages/Timeline";
 
 const App = () => {
   return (
@@ -58,6 +59,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Circles />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/timeline"
+            element={
+              <ProtectedRoute>
+                <Timeline />
               </ProtectedRoute>
             }
           />

@@ -59,7 +59,7 @@ export const getCirclesByUser = async (req, res) => {
         })
     }
 
-    const circles = await Circle.find({ family,members: userId }).populate("members", "name email");
+    const circles = await Circle.find({ family,members: userId }).populate("members", "name avatar email");
     return res.status(200).json({
         success: true,
         message: "Circles retrieved successfully",

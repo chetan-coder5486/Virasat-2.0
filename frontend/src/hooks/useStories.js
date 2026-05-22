@@ -18,10 +18,11 @@ const normalizeStory = (story) => {
   };
 };
 
-export function useStories(circleId = null) {
+export function useStories(circleId = null, options = {}) {
   const { api } = useAuth();
+  const { enabled = true } = options;
 
-  const { data: stories = [], isLoading: loading, error } = useQuery({
+  const { data: stories = [], isPending: loading, error } = useQuery({
     queryKey: ["stories", circleId ?? "family"],
     queryFn: async () => {
       const params = circleId ? { circleId } : {};
@@ -29,11 +30,14 @@ export function useStories(circleId = null) {
       return (res.data.data || []).map(normalizeStory);
     },
     staleTime: 1000 * 60 * 5,
+    enabled,
   });
 
   return {
     stories,
     loading,
-    error: error?.response?.data?.message || (error ? "Failed to load stories." : ""),
+    error:
+      error?.response?.data?.message ||
+      (error ? "Failed to load stories." : ""),
   };
 }
