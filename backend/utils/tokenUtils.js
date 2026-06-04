@@ -49,20 +49,22 @@ export const verifyRefreshToken = (token) => {
 }
 
 export const sendRefreshToken = (res, token) => {
+    const isProduction = process.env.NODE_ENV === 'production'
     res.cookie('refreshToken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
         path: '/api/v1/auth/refresh' //only send for this path
     })
 }
 
 export const clearRefreshToken = (res) => {
+    const isProduction = process.env.NODE_ENV === 'production'
     res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 0,
         path: '/api/v1/auth/refresh'
     })
