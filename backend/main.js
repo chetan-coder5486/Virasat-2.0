@@ -14,29 +14,34 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const rawOrigins = process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173';
-const allowedOrigins = rawOrigins.split(',').map((origin) => origin.trim()).filter(Boolean);
+const normalizeOrigin = (value) => value.replace(/\/+$/, '');
+const allowedOrigins = rawOrigins
+  .split(',')
+  .map((origin) => normalizeOrigin(origin.trim()))
+  .filter(Boolean);
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true);
-      }
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
 }))
 
 //apis
 
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/story', storyRoutes); 
+app.use('/api/v1/story', storyRoutes);
 app.use('/api/v1/family', familyRoutes); // New family routes
 app.use('/api/v1/invite', inviteRoutes); // New invite routes
 app.use('/api/v1/user', userRoutes); //   user routes 
