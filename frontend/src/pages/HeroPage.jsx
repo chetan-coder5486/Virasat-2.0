@@ -1,10 +1,11 @@
 import React from "react";
 import Navbar from "../components/Navbar";
 import { ArrowRight, BookOpen } from "lucide-react"; // Optional: cleaner than raw SVGs
+import { Link } from "react-router";
 
 const HeroPage = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-70vh">
       <section className="relative overflow-hidden">
         {/* Background Image & Overlay */}
         <div className="absolute inset-0">
@@ -34,16 +35,17 @@ const HeroPage = () => {
 
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               {/* Primary Button - Using that brown color we found earlier */}
-              <button className="inline-flex items-center justify-center font-medium transition-all bg-[#A65E2E] hover:bg-[#8e4f26] text-white h-12 rounded-md px-8 gap-2 text-base shadow-lg">
+              <Link to="/family
+              " className="inline-flex items-center justify-center font-medium transition-all bg-[#A65E2E] hover:bg-[#8e4f26] text-white h-12 rounded-md px-8 gap-2 text-base shadow-lg">
                 Start Your Family Trunk
                 <ArrowRight className="h-5 w-5" />
-              </button>
+              </Link>
 
               {/* Secondary Button */}
-              <button className="inline-flex items-center justify-center font-medium transition-all border border-white/30 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white h-12 rounded-md px-8 gap-2 text-base">
+              <Link to="/stories" className="inline-flex items-center justify-center font-medium transition-all border border-white/30 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white h-12 rounded-md px-8 gap-2 text-base">
                 <BookOpen className="h-5 w-5" />
                 Browse Stories
-              </button>
+              </Link>
             </div>
           </div>
         </div>

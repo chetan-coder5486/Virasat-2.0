@@ -22,35 +22,15 @@ import CreateFamilyForm from "@/components/CreateFamilyForm";
 import InviteMemberModal from "@/components/InviteMemberModal";
 import { Link } from "react-router";
 import AdminApprovals from "@/pages/AdminApprovals";
+import { useFamily } from "@/hooks/useFamily";
 
 
 const Family = () => {
-  const [family, setFamily] = useState(null);
   const [showCreateFamily, setShowCreateFamily] = useState(false);
   const [showInviteMember, setShowInviteMember] = useState(false);
   const [showJoinRequests, setShowJoinRequests] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { api,user } = useAuth();
-  useEffect(() => {
-    
-    //fetch family details and members
-    const fetchFamilyDetails = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get("/family/");
-        setFamily(response.data.family);
-        console.log(response.data.family);
-      } catch (error) {
-        console.error("Error fetching family details:", error);
-      }finally{
-        setLoading(false);
-      }
-    };
-
-    fetchFamilyDetails();
-  }, []);
-
- 
+  const { data: family,isPending } = useFamily();
+  const { user } = useAuth();
 
   const handleCreateFamily = () => {
     setShowCreateFamily(true);
@@ -72,7 +52,7 @@ const Family = () => {
     <>
       <Navbar />
       {
-        loading ? (
+        isPending ? (
           <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
             <p className="text-gray-600">Loading family details...</p>
           </div>

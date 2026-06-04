@@ -18,6 +18,8 @@ const normalizeStory = (story) => {
   };
 };
 
+
+
 export function useStories(circleId = null, options = {}) {
   const { api } = useAuth();
   const { enabled = true } = options;
@@ -41,3 +43,4 @@ export function useStories(circleId = null, options = {}) {
       (error ? "Failed to load stories." : ""),
   };
 }
+

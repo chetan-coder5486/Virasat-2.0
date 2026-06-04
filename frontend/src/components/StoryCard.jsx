@@ -1,6 +1,19 @@
 import { motion } from "framer-motion";
-import { Calendar, Tag, MessageCircle, Heart } from "lucide-react";
+import {
+  Calendar,
+  Tag,
+  MessageCircle,
+  Heart,
+  MoreVertical,
+  Trash2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const StoryCard = ({
   title,
@@ -13,6 +26,7 @@ const StoryCard = ({
   comments,
   index = 0,
   onClick,
+  onDelete,
 }) => {
   return (
     <motion.div
@@ -32,7 +46,7 @@ const StoryCard = ({
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 to-transparent" />
         </div>
       )}
-      <div className="p-5">
+      <div className="pt-5 pl-5 pr-5 pb-2">
         <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
           <span>
@@ -76,6 +90,38 @@ const StoryCard = ({
             <MessageCircle className="h-3.5 w-3.5" />
             {comments}
           </span>
+          <div className="ml-auto">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(event) => event.stopPropagation()}
+                  aria-label="Story options"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="end"
+                className="w-40 p-1"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-8 w-full justify-start text-destructive"
+                  onClick={onDelete}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete story
+                </Button>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
     </motion.div>

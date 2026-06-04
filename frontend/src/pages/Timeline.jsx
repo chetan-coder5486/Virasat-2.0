@@ -1,131 +1,10 @@
 import Navbar from "@/components/Navbar";
 import TimelineItem from "@/components/TimelineItem";
 import { motion } from "framer-motion";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
-
-const timelineEvents = [
-  {
-    year: "1918",
-    title: "Spring Letters",
-    description:
-      "A bundle of handwritten notes survives the journey. The ink has faded, but the hope has not.",
-    season: "spring",
-  },
-  {
-    year: "1920",
-    title: "Family Emigrates",
-    description:
-      "The Johnson family arrives from Sweden, starting a new chapter in a land full of promise and hardship.",
-    season: "spring",
-  },
-  {
-    year: "1932",
-    title: "The Family Garden",
-    description:
-      "Great-grandpa plants roses that still bloom today, a living thread between generations.",
-    season: "summer",
-  },
-  {
-    year: "1943",
-    title: "War Letters",
-    description:
-      "Grandpa James writes home from overseas. Every letter folded with the hope of return.",
-    season: "winter",
-  },
-  {
-    year: "1950",
-    title: "First Harvest",
-    description:
-      "The barn is full, the radio is loud, and neighbors bring pies for the celebration.",
-    season: "autumn",
-  },
-  {
-    year: "1955",
-    title: "First Family Home",
-    description:
-      "Grandma and Grandpa buy their first house on Oak Street. Fresh paint and new beginnings.",
-    season: "spring",
-  },
-  {
-    year: "1962",
-    title: "Summer Parade",
-    description:
-      "Kids ride bikes in the town parade. Grandpa waves from the back of his pickup.",
-    season: "summer",
-  },
-  {
-    year: "1965",
-    title: "Thanksgiving Tradition",
-    description:
-      "The apple pie recipe makes its debut. Warm cinnamon, laughter, and a kitchen too small for all the love.",
-    season: "autumn",
-  },
-  {
-    year: "1970",
-    title: "First Day of School",
-    description:
-      "Mom's first day, with a backpack bigger than her. She looked back once and then walked in.",
-    season: "autumn",
-  },
-  {
-    year: "1978",
-    title: "The Great Road Trip",
-    description:
-      "Coast-to-coast in Dad's old station wagon. Maps on the dashboard, songs out of tune.",
-    season: "summer",
-  },
-  {
-    year: "1982",
-    title: "The Wedding",
-    description:
-      "Mom and Dad tie the knot. Uncle Frank makes a toast no one will forget. Rain and laughter.",
-    season: "summer",
-  },
-  {
-    year: "1991",
-    title: "Winter Diary",
-    description:
-      "Snowstorm days turn into diary pages about cocoa, card games, and a radio that never slept.",
-    season: "winter",
-  },
-  {
-    year: "1995",
-    title: "New Generation",
-    description: "The first grandchild arrives at 3am. Everyone comes anyway.",
-    season: "spring",
-  },
-  {
-    year: "2004",
-    title: "Autumn Fair",
-    description:
-      "A photo booth strip from the county fair becomes a favorite fridge souvenir.",
-    season: "autumn",
-  },
-  {
-    year: "2010",
-    title: "Family Reunion",
-    description:
-      "50+ family members gather for the first time. Faces you have not seen. Names you remember.",
-    season: "summer",
-  },
-  {
-    year: "2018",
-    title: "Winter Cabin",
-    description:
-      "Everyone squeezes into the lake cabin. Boots by the fire, stories by the window.",
-    season: "winter",
-  },
-  {
-    year: "2024",
-    title: "Family Trunk",
-    description:
-      "Our stories find their digital home. So nothing is lost. So no one is forgotten.",
-    season: "autumn",
-  },
-];
+import { useTimelineStories } from "@/hooks/useTImelineStories";
 
 const seasonThemes = {
   spring: {
@@ -231,11 +110,16 @@ const particleConfig = {
 export default function Timeline() {
   const [search, setSearch] = useState("");
   const [activeSeason, setActiveSeason] = useState(null);
+  const {
+    stories: timelineStories,
+    loading,
+    error,
+  } = useTimelineStories();
 
   const activeTheme = seasonThemes[activeSeason] || seasonThemes.default;
 
   const filtered = useMemo(() => {
-    return timelineEvents.filter((e) => {
+    return timelineStories.filter((e) => {
       const matchSearch =
         !search ||
         e.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -244,7 +128,7 @@ export default function Timeline() {
       const matchSeason = !activeSeason || e.season === activeSeason;
       return matchSearch && matchSeason;
     });
-  }, [search, activeSeason]);
+  }, [search, activeSeason, timelineStories]);
 
   const seasons = ["spring", "summer", "autumn", "winter"];
 
@@ -425,7 +309,7 @@ export default function Timeline() {
           <div className="flex flex-col gap-0">
             {filtered.map((event, i) => (
               <TimelineItem
-                key={event.year}
+                key={event.id || `${event.year}-${event.title}-${i}`}
                 {...event}
                 side={i % 2 === 0 ? "left" : "right"}
                 index={i}
@@ -433,7 +317,19 @@ export default function Timeline() {
             ))}
           </div>
 
-          {filtered.length === 0 && (
+          {loading && (
+            <div className="py-16 text-center" style={{ color: "#C4A882" }}>
+              <p style={{ fontSize: "18px" }}>Loading timeline stories...</p>
+            </div>
+          )}
+
+          {error && !loading && (
+            <div className="py-16 text-center" style={{ color: "#C4A882" }}>
+              <p style={{ fontSize: "18px" }}>{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && filtered.length === 0 && (
             <div className="py-24 text-center" style={{ color: "#C4A882" }}>
               <p style={{ fontSize: "18px" }}>
                 No memories found for that search.

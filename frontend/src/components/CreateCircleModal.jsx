@@ -2,15 +2,17 @@ import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Users, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
+import { useFamily } from "@/hooks/useFamily";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/AuthContext";
 
 const CreateCircleModal = ({ onClose, onCreated }) => {
-  const { api, family } = useAuth();
+  const { api } = useAuth();
   const queryClient = useQueryClient();
+  const { data: family = [] } = useFamily();
   const [circleName, setCircleName] = useState("");
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -46,6 +48,7 @@ const CreateCircleModal = ({ onClose, onCreated }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
     const trimmedName = circleName.trim();
 
     if (!trimmedName) {
@@ -68,6 +71,7 @@ const CreateCircleModal = ({ onClose, onCreated }) => {
       setError(err.response?.data?.message || "Failed to create circle.");
     } finally {
       setSubmitting(false);
+      setLoading(false);
     }
   };
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar.jsx";
 import StoryCard from "@/components/StoryCard.jsx";
 import { UploadMemoryModal } from "@/components/UploadMemoryModal.jsx";
@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useStories } from "@/hooks/useStories";
+import { useFamily } from "@/hooks/useFamily.js";
+import { useAuth } from "@/context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Stories = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -18,7 +21,10 @@ const Stories = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [showFilters, setShowFilters] = useState(true);
+  const { data: family } = useFamily();
   const { stories, loading, error } = useStories();
+  const { api } = useAuth();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -63,6 +69,7 @@ const Stories = () => {
     });
   }, [stories, searchTerm, selectedTags]);
 
+  console.log("Filtered Stories:", filteredStories);
   const toggleTag = (tag) => {
     setSelectedTags((prev) => {
       const next = new Set(prev);
@@ -78,6 +85,20 @@ const Stories = () => {
   const clearFilters = () => {
     setSearchTerm("");
     setSelectedTags(new Set());
+  };
+
+  const handleDelete = async (storyId) => {
+    if (!storyId) return;
+    try {
+      await api.delete(`/story/${storyId}`);
+      queryClient.invalidateQueries({ queryKey: ["stories"] });
+      if (selectedStory?.id === storyId) {
+        setIsViewOpen(false);
+        setSelectedStory(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete story", err);
+    }
   };
 
   return (
@@ -161,6 +182,16 @@ const Stories = () => {
           <div className="py-12 text-center text-sm text-muted-foreground">
             Loading stories...
           </div>
+        ) : family==null ? (
+          <div className="flex flex-col items-center py-12 text-center text-lg text-foreground font-display ">
+            Join or create a family to start sharing stories.
+            <Link
+              to="/family"
+              className="mt-4 inline-flex items-center justify-center font-medium transition-all bg-[#A65E2E] hover:bg-[#8e4f26] text-white h-12 rounded-md px-8 gap-2 text-base shadow-lg"
+            >
+              Join or Create a Family
+            </Link>
+          </div>
         ) : error ? (
           <div className="py-12 text-center text-sm text-red-600">{error}</div>
         ) : stories.length === 0 ? (
@@ -182,6 +213,7 @@ const Stories = () => {
                   setSelectedStory(story);
                   setIsViewOpen(true);
                 }}
+                onDelete={() => handleDelete(story.id)}
               />
             ))}
           </div>

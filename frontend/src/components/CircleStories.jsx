@@ -1,12 +1,34 @@
-import React from "react";
+import React, { useState } from "react";
 import StoryCard from "@/components/StoryCard";
 import { Button } from "@/components/ui/button";
 import { useStories } from "@/hooks/useStories";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "react-toastify";
 
 const CircleStories = ({ circleId, viewMode = "scrapbook", onAddStory }) => {
   const { stories, loading, error } = useStories(circleId, {
     enabled: Boolean(circleId),
   });
+  const {api} = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedStory, setSelectedStory] = useState(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const handleDelete = async (storyId) => {
+    if (!storyId) return;
+    try {
+      await api.delete(`/story/${storyId}`);
+      queryClient.invalidateQueries({ queryKey: ["stories", circleId ?? "family"] });
+      if (selectedStory?.id === storyId) {
+        setIsViewOpen(false);
+        setSelectedStory(null);
+      }
+      toast.success("Story deleted successfully");
+    } catch (err) {
+      console.error("Failed to delete story", err);
+      toast.error("Failed to delete story");
+    }
+  };
 
   if (!circleId) {
     return (
@@ -69,7 +91,11 @@ const CircleStories = ({ circleId, viewMode = "scrapbook", onAddStory }) => {
           key={story.id}
           className={viewMode === "scrapbook" ? "mb-5 break-inside-avoid" : ""}
         >
-          <StoryCard {...story} index={index} />
+          <StoryCard
+            {...story}
+            index={index}
+            onDelete={() => handleDelete(story.id)}
+          />
         </div>
       ))}
     </div>
