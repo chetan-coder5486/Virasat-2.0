@@ -5,7 +5,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or use SendGrid, Resend, etc.
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  requireTLS: true,
+  family: 4,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
@@ -13,10 +17,10 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendInviteEmail({ to, token, familyName, inviterName, expiresAt }) {
-    console.log("Entered sendInviteEmail with params:", { to, token, familyName, inviterName, expiresAt });
+  console.log("Entered sendInviteEmail with params:", { to, token, familyName, inviterName, expiresAt });
   const joinLink = `${process.env.CLIENT_URL}/join?token=${token}`;
   const expiry = new Date(expiresAt).toLocaleString();
-    console.log(`Preparing to send invite email to ${to} with token ${token} expiring at ${expiry}`);
+  console.log(`Preparing to send invite email to ${to} with token ${token} expiring at ${expiry}`);
   await transporter.sendMail({
     from: `"Family Trunk" <${process.env.EMAIL_USER}>`,
     to,
