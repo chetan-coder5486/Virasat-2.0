@@ -1,30 +1,14 @@
 // backend/utils/emailService.js
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-import dns from 'dns';
+import { Resend } from 'resend';
 
-dotenv.config();
-dns.setDefaultResultOrder('ipv4first');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  requireTLS: true,
-  family: 4,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendInviteEmail({ to, token, familyName, inviterName, expiresAt }) {
-  console.log("Entered sendInviteEmail with params:", { to, token, familyName, inviterName, expiresAt });
   const joinLink = `${process.env.CLIENT_URL}/join?token=${token}`;
   const expiry = new Date(expiresAt).toLocaleString();
-  console.log(`Preparing to send invite email to ${to} with token ${token} expiring at ${expiry}`);
-  await transporter.sendMail({
-    from: `"Family Trunk" <${process.env.EMAIL_USER}>`,
+
+  await resend.emails.send({
+    from: 'Family Trunk <virasat-2-0.vercel.app>', // must be a verified domain in Resend
     to,
     subject: `You're invited to join the ${familyName} family on Family Trunk`,
     html: `
@@ -55,8 +39,8 @@ export async function sendInviteEmail({ to, token, familyName, inviterName, expi
 }
 
 export async function sendApprovalEmail({ to, familyName }) {
-  await transporter.sendMail({
-    from: `"Family Trunk" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'Family Trunk <virasat-2-0.vercel.app>',
     to,
     subject: `You're now part of the ${familyName} family!`,
     html: `<p>Your request to join <strong>${familyName}</strong> has been approved. Welcome! 🎊</p>`
@@ -64,8 +48,8 @@ export async function sendApprovalEmail({ to, familyName }) {
 }
 
 export async function sendDenialEmail({ to, familyName }) {
-  await transporter.sendMail({
-    from: `"Family Trunk" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'Family Trunk <virasat-2-0.vercel.app>',
     to,
     subject: `Update on your Family Trunk request`,
     html: `<p>Your request to join <strong>${familyName}</strong> was not approved at this time.</p>`
