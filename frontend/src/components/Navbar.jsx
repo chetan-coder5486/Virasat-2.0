@@ -85,7 +85,7 @@ const Navbar = () => {
           <NavLink
             className={navClass({
               isActive: window.location.pathname === "/circles",
-            })} 
+            })}
             to="/circles"
           >
             Circles
@@ -164,29 +164,40 @@ const Navbar = () => {
                 <PopoverTitle className="text-sm">Menu</PopoverTitle>
               </PopoverHeader>
               <div className="flex flex-col gap-1">
-                <NavLink className={navClass({ isActive: location.pathname === "/" })} to="/">
+                <NavLink
+                  className={navClass({ isActive: location.pathname === "/" })}
+                  to="/"
+                >
                   Dashboard
                 </NavLink>
                 <NavLink
-                  className={navClass({ isActive: location.pathname === "/timeline" })}
+                  className={navClass({
+                    isActive: location.pathname === "/timeline",
+                  })}
                   to="/timeline"
                 >
                   Timeline
                 </NavLink>
                 <NavLink
-                  className={navClass({ isActive: location.pathname === "/stories" })}
+                  className={navClass({
+                    isActive: location.pathname === "/stories",
+                  })}
                   to="/stories"
                 >
                   Stories
                 </NavLink>
                 <NavLink
-                  className={navClass({ isActive: location.pathname === "/family" })}
+                  className={navClass({
+                    isActive: location.pathname === "/family",
+                  })}
                   to="/family"
                 >
                   Family
                 </NavLink>
                 <NavLink
-                  className={navClass({ isActive: location.pathname === "/circles" })}
+                  className={navClass({
+                    isActive: location.pathname === "/circles",
+                  })}
                   to="/circles"
                 >
                   Circles
