@@ -148,9 +148,87 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden p-2 text-gray-600">
-          <Menu className="h-6 w-6" />
-        </button>
+        <div className="md:hidden">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100"
+                aria-label="Open menu"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-56">
+              <PopoverHeader>
+                <PopoverTitle className="text-sm">Menu</PopoverTitle>
+              </PopoverHeader>
+              <div className="flex flex-col gap-1">
+                <NavLink className={navClass({ isActive: location.pathname === "/" })} to="/">
+                  Dashboard
+                </NavLink>
+                <NavLink
+                  className={navClass({ isActive: location.pathname === "/timeline" })}
+                  to="/timeline"
+                >
+                  Timeline
+                </NavLink>
+                <NavLink
+                  className={navClass({ isActive: location.pathname === "/stories" })}
+                  to="/stories"
+                >
+                  Stories
+                </NavLink>
+                <NavLink
+                  className={navClass({ isActive: location.pathname === "/family" })}
+                  to="/family"
+                >
+                  Family
+                </NavLink>
+                <NavLink
+                  className={navClass({ isActive: location.pathname === "/circles" })}
+                  to="/circles"
+                >
+                  Circles
+                </NavLink>
+              </div>
+              <div className="mt-3 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleNewStory}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#A65E2E] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#8e4f26]"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Story
+                </button>
+                {user ? (
+                  <>
+                    <Link
+                      to="/profile"
+                      className="rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                    >
+                      Go to profile
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                    to="/login"
+                  >
+                    Sign In
+                  </Link>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </nav>
   );
