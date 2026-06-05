@@ -8,7 +8,7 @@ export async function sendInviteEmail({ to, token, familyName, inviterName, expi
   const expiry = new Date(expiresAt).toLocaleString();
 
   await resend.emails.send({
-    from: 'Family Trunk <admin@virasat-2-0.com>', // must be a verified domain in Resend
+    from: 'Family Trunk <admin@virasat.space>', // must be a verified domain in Resend
     to,
     subject: `You're invited to join the ${familyName} family on Family Trunk`,
     html: `
