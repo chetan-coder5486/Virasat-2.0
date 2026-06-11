@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar.jsx";
 import StoryCard from "@/components/StoryCard.jsx";
+import LoadingStoryCard from "@/components/LoadingStoryCard.jsx";
 import { UploadMemoryModal } from "@/components/UploadMemoryModal.jsx";
 import ViewStoryModal from "@/components/ViewStoryModal.jsx";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, Grid3X3, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,9 @@ const Stories = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [showFilters, setShowFilters] = useState(true);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentFileName, setCurrentFileName] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const { data: family } = useFamily();
   const { stories, loading, error } = useStories();
   const { api } = useAuth();
@@ -105,7 +109,21 @@ const Stories = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       {isUploadOpen && (
-        <UploadMemoryModal onClose={() => setIsUploadOpen(false)} />
+        <UploadMemoryModal 
+          onClose={() => setIsUploadOpen(false)}
+          onUploadStart={(data) => {
+            setIsUploading(true);
+            setCurrentFileName(data.fileName);
+            setUploadProgress(data.progress);
+            if (data.completed) {
+              setIsUploading(false);
+              setTimeout(() => {
+                setUploadProgress(0);
+                setCurrentFileName("");
+              }, 2000);
+            }
+          }}
+        />
       )}
       {isViewOpen && (
         <ViewStoryModal
@@ -204,6 +222,14 @@ const Stories = () => {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <AnimatePresence>
+              {isUploading && (
+                <LoadingStoryCard 
+                  uploadProgress={uploadProgress}
+                  currentFileName={currentFileName}
+                />
+              )}
+            </AnimatePresence>
             {filteredStories.map((story, i) => (
               <StoryCard
                 key={story.id}

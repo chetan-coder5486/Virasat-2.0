@@ -1,12 +1,21 @@
 import React, { useState } from "react";
 import StoryCard from "@/components/StoryCard";
+import LoadingStoryCard from "@/components/LoadingStoryCard";
 import { Button } from "@/components/ui/button";
 import { useStories } from "@/hooks/useStories";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-toastify";
+import { AnimatePresence } from "framer-motion";
 
-const CircleStories = ({ circleId, viewMode = "scrapbook", onAddStory }) => {
+const CircleStories = ({ 
+  circleId, 
+  viewMode = "scrapbook", 
+  onAddStory,
+  isUploading = false,
+  uploadProgress = 0,
+  currentFileName = "",
+}) => {
   const { stories, loading, error } = useStories(circleId, {
     enabled: Boolean(circleId),
   });
@@ -86,6 +95,18 @@ const CircleStories = ({ circleId, viewMode = "scrapbook", onAddStory }) => {
           : "grid grid-cols-1"
       }`}
     >
+      <AnimatePresence>
+        {isUploading && (
+          <div
+            className={viewMode === "scrapbook" ? "mb-5 break-inside-avoid" : ""}
+          >
+            <LoadingStoryCard 
+              uploadProgress={uploadProgress}
+              currentFileName={currentFileName}
+            />
+          </div>
+        )}
+      </AnimatePresence>
       {stories.map((story, index) => (
         <div
           key={story.id}

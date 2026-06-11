@@ -113,6 +113,7 @@ function StepDot({ active, done, label, number }) {
 export const UploadMemoryModal = ({
   onClose,
   onCreated,
+  onUploadStart,
   circleId = null,
   circleName = null,
 }) => {
@@ -205,7 +206,7 @@ export const UploadMemoryModal = ({
   const uploadToCloudinary = async (file, onProgress) => {
     const fd = new FormData();
     const resourceType = file.type.startsWith("video") ? "video" : "image";
-    const preset = (resourceType==="video")?UPLOAD_PRESET_VIDEOS:UPLOAD_PRESET_IMAGES
+    const preset = (resourceType==="video")?UPLOAD_PRESET_VIDEOS:UPLOAD_PRESET_IMAGES;
     const { signature, timestamp, apiKey, cloudName } =
       await getCloudinarySignature(resourceType,preset);
 
@@ -236,20 +237,48 @@ export const UploadMemoryModal = ({
       setUploading(true);
       setUploadProgress(0);
 
+      // Close modal immediately and show loading card
+      onClose();
+      
       const totalBytes =
         uploadedMedia.reduce((s, m) => s + (m.file?.size || 0), 0) || 1;
       let uploadedBytes = 0;
       const uploadedFiles = [];
 
       for (const media of uploadedMedia) {
-        setCurrentFileLabel(media.name);
+        const fileLabel = media.name;
+        setCurrentFileLabel(fileLabel);
+        
+        // Notify parent of upload progress
+        if (onUploadStart) {
+          onUploadStart({
+            fileName: fileLabel,
+            progress: 0,
+          });
+        }
+
         const result = await uploadToCloudinary(media.file, (loaded) => {
-          setUploadProgress(
-            Math.round(((uploadedBytes + loaded) / totalBytes) * 100),
-          );
+          const newProgress = Math.round(((uploadedBytes + loaded) / totalBytes) * 100);
+          setUploadProgress(newProgress);
+          
+          if (onUploadStart) {
+            onUploadStart({
+              fileName: fileLabel,
+              progress: newProgress,
+            });
+          }
         });
         uploadedBytes += media.file?.size || 0;
-        setUploadProgress(Math.round((uploadedBytes / totalBytes) * 100));
+        const finalProgress = Math.round((uploadedBytes / totalBytes) * 100);
+        setUploadProgress(finalProgress);
+        
+        if (onUploadStart) {
+          onUploadStart({
+            fileName: fileLabel,
+            progress: finalProgress,
+          });
+        }
+        
         uploadedFiles.push(result);
       }
 
@@ -268,8 +297,17 @@ export const UploadMemoryModal = ({
       queryClient.invalidateQueries({
         queryKey: ["stories", circleId ?? "family"],
       });
+      
+      // Notify parent that upload is complete
+      if (onUploadStart) {
+        onUploadStart({
+          fileName: "",
+          progress: 100,
+          completed: true,
+        });
+      }
+      
       if (onCreated) onCreated(res.data);
-      onClose();
     } catch (err) {
       console.error("Failed to create memory:", err);
       setErrors((prev) => ({
