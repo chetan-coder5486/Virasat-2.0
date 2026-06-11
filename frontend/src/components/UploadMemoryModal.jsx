@@ -16,7 +16,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 
-const UPLOAD_PRESET = "family_trunk_uploads";
+const UPLOAD_PRESET_IMAGES = "family_trunk_uploads";
+const UPLOAD_PRESET_VIDEOS = "family_trunk_video_uploads"
 const SIGNATURE_ENDPOINT = "/user/cloudinary-signature";
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
@@ -193,9 +194,9 @@ export const UploadMemoryModal = ({
 
   // ── Upload to Cloudinary ────────────────────────────────────────────────────
 
-  const getCloudinarySignature = async (resourceType) => {
+  const getCloudinarySignature = async (resourceType,preset) => {
     const response = await api.post(SIGNATURE_ENDPOINT, {
-      uploadPreset: UPLOAD_PRESET,
+      uploadPreset: preset,
       resourceType,
     });
     return response.data;
@@ -204,14 +205,15 @@ export const UploadMemoryModal = ({
   const uploadToCloudinary = async (file, onProgress) => {
     const fd = new FormData();
     const resourceType = file.type.startsWith("video") ? "video" : "image";
+    const preset = (resourceType==="video")?UPLOAD_PRESET_VIDEOS:UPLOAD_PRESET_IMAGES
     const { signature, timestamp, apiKey, cloudName } =
-      await getCloudinarySignature(resourceType);
+      await getCloudinarySignature(resourceType,preset);
 
     fd.append("file", file);
     fd.append("api_key", apiKey);
     fd.append("timestamp", timestamp);
     fd.append("signature", signature);
-    fd.append("upload_preset", UPLOAD_PRESET);
+    fd.append("upload_preset", preset);
     const res = await axios.post(
       `https://api.cloudinary.com/v1_1/${cloudName || import.meta.env.VITE_CLOUDINARY_NAME}/${resourceType}/upload`,
       fd,
