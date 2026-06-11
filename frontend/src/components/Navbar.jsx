@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { TreePine, Plus, Menu } from "lucide-react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navClass = ({ isActive }) =>
     `rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
       isActive
@@ -149,7 +150,7 @@ const Navbar = () => {
 
         {/* Mobile Menu Button */}
         <div className="md:hidden">
-          <Popover>
+          <Popover open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <PopoverTrigger asChild>
               <button
                 type="button"
@@ -206,7 +207,10 @@ const Navbar = () => {
               <div className="mt-3 flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={handleNewStory}
+                  onClick={() => {
+                    handleNewStory();
+                    setMobileMenuOpen(false);
+                  }}
                   className="inline-flex items-center justify-center gap-2 rounded-md bg-[#A65E2E] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#8e4f26]"
                 >
                   <Plus className="h-4 w-4" />
