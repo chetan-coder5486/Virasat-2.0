@@ -4,12 +4,14 @@ import { useAuth } from "@/context/AuthContext";
 const getVideoThumbnail = (videoUrl) => {
   // Change video URL to an image URL with transformations
   return videoUrl
-    .replace("/video/upload/", "/video/upload/so_auto,c_scale,w_500/")
+    .replace("/video/upload/", "/video/upload/so_5,c_scale,w_500/")
     .replace(/\.[^/.]+$/, ".jpg"); // Changes extension to .jpg
 };
 
 const normalizeStory = (story) => {
-  const firstMedia = story.memoryFiles?.find((media) => (media.type === "image")?media.url:getVideoThumbnail(media.url)) || null;
+  const firstMedia = story.memoryFiles?.find((media) => media?.url);
+  const firstMediaUrl = (firstMedia?.type === "video" ? getVideoThumbnail(firstMedia.url) : firstMedia?.url) || "";
+  console.log("Normalizing story:", { story, firstMedia });
   return {
     id: story._id,
     title: story.title,
@@ -17,7 +19,7 @@ const normalizeStory = (story) => {
     author: story.author,
     date: story.date,
     tags: Array.isArray(story.tags) ? story.tags : [],
-    imageUrl: firstMedia?.url || "",
+    imageUrl: firstMediaUrl,
     likes: story.likes ?? 0,
     comments: story.comments ?? 0,
     memoryFiles: story.memoryFiles || [],
