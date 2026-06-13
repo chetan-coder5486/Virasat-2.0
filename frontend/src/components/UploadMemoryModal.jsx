@@ -208,8 +208,8 @@ export const UploadMemoryModal = ({
     const resourceType = file.type.startsWith("video") ? "video" : "image";
     const preset = (resourceType==="video")?UPLOAD_PRESET_VIDEOS:UPLOAD_PRESET_IMAGES;
     const { signature, timestamp, apiKey, cloudName } =
-      await getCloudinarySignature(resourceType,preset);
-
+    await getCloudinarySignature(resourceType,preset);
+    console.log("Cloudinary signature obtained:", { signature, timestamp, apiKey, cloudName });
     fd.append("file", file);
     fd.append("api_key", apiKey);
     fd.append("timestamp", timestamp);

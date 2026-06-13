@@ -1,8 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 
+const getVideoThumbnail = (videoUrl) => {
+  // Change video URL to an image URL with transformations
+  return videoUrl
+    .replace("/video/upload/", "/video/upload/so_auto,c_scale,w_500/")
+    .replace(/\.[^/.]+$/, ".jpg"); // Changes extension to .jpg
+};
+
 const normalizeStory = (story) => {
-  const firstMedia = story.memoryFiles?.find((media) => media?.url);
+  const firstMedia = story.memoryFiles?.find((media) => (media.type === "image")?media.url:getVideoThumbnail(media.url)) || null;
   return {
     id: story._id,
     title: story.title,
