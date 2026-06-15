@@ -21,6 +21,7 @@ Virasat is a web-based platform designed to help families digitize and preserve 
 ## ✨ Features
 
 ### Core Features
+
 - **User Authentication**: Secure signup, login, and profile management with JWT tokens
 - **Family Management**: Create families, invite members, and manage family hierarchies
 - **Circles**: Create and manage custom groups within families for organizing stories
@@ -33,12 +34,14 @@ Virasat is a web-based platform designed to help families digitize and preserve 
 - **Email Notifications**: Automated emails for invitations and notifications
 
 ### User Roles
+
 - **Admin**: Full access to family management and approvals
 - **Members**: Can view stories, upload memories to circles, and manage invitations
 
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React 19** - UI library with latest features
 - **Vite** - Fast build tool and dev server
 - **React Router 7** - Client-side routing
@@ -51,6 +54,7 @@ Virasat is a web-based platform designed to help families digitize and preserve 
 - **React Toastify** - Toast notifications
 
 ### Backend
+
 - **Node.js + Express 5** - Server framework
 - **MongoDB + Mongoose** - Database and ODM
 - **JWT** - Authentication tokens
@@ -147,18 +151,21 @@ Virasat-2.0/
 ## 🚀 Installation
 
 ### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd Virasat-2.0
 ```
 
 ### 2. Backend Setup
+
 ```bash
 cd backend
 npm install
 ```
 
 ### 3. Frontend Setup
+
 ```bash
 cd ../frontend
 npm install
@@ -167,6 +174,7 @@ npm install
 ## 🔐 Environment Variables
 
 ### Backend (.env)
+
 Create a `.env` file in the `backend/` directory:
 
 ```env
@@ -198,6 +206,7 @@ FROM_EMAIL=noreply@virasat.com
 ```
 
 ### Frontend (.env)
+
 Create a `.env` file in the `frontend/` directory:
 
 ```env
@@ -210,22 +219,27 @@ VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 ### Development Mode
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd backend
 npm run dev
 ```
+
 The API server will start at `http://localhost:3000`
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd frontend
 npm run dev
 ```
+
 The app will be available at `http://localhost:5173`
 
 ### Production Build
 
 **Frontend Build:**
+
 ```bash
 cd frontend
 npm run build
@@ -235,16 +249,19 @@ npm run preview
 ## 📡 API Endpoints
 
 ### Authentication
+
 - `POST /api/v1/auth/signup` - Register new user
 - `POST /api/v1/auth/login` - Login user
 - `POST /api/v1/auth/logout` - Logout user
 
 ### Users
+
 - `GET /api/v1/user/profile` - Get user profile
 - `PUT /api/v1/user/profile` - Update user profile
 - `GET /api/v1/user/:id` - Get user by ID
 
 ### Families
+
 - `POST /api/v1/family/create` - Create a new family
 - `GET /api/v1/family/:id` - Get family details
 - `GET /api/v1/family/:id/members` - Get family members
@@ -252,6 +269,7 @@ npm run preview
 - `DELETE /api/v1/family/:id` - Delete family
 
 ### Circles
+
 - `POST /api/v1/circle/create` - Create circle
 - `GET /api/v1/circle/:id` - Get circle details
 - `GET /api/v1/circle/:id/stories` - Get circle stories
@@ -259,6 +277,7 @@ npm run preview
 - `DELETE /api/v1/circle/:id` - Delete circle
 
 ### Stories
+
 - `POST /api/v1/story/create` - Create new story with media
 - `GET /api/v1/story/:id` - Get story details
 - `GET /api/v1/story/family/:familyId` - Get family stories
@@ -267,12 +286,14 @@ npm run preview
 - `DELETE /api/v1/story/:id` - Delete story
 
 ### Invitations
+
 - `POST /api/v1/invite/send` - Send family invitation
 - `GET /api/v1/invite/:token` - Validate invitation token
 - `POST /api/v1/invite/:token/accept` - Accept invitation
 - `GET /api/v1/invite/pending` - Get pending invitations
 
 ### Admin/Approvals
+
 - `GET /api/v1/family/:id/approvals` - Get pending join requests
 - `POST /api/v1/family/:id/approve/:requestId` - Approve join request
 - `POST /api/v1/family/:id/reject/:requestId` - Reject join request
