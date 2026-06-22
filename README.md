@@ -1,4 +1,4 @@
-# Virasat 2.0 - Digital Family Memory Keeper
+# Virasat 2.0 - Digital Family Memory Keeper (https://www.virasat.space/)
 
 A modern full-stack web application for preserving and sharing family memories through stories and circles. Virasat allows families to create digital archives of their memories, organize them into circles (groups), and invite family members to collaborate and view shared stories.
 
