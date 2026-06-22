@@ -36,72 +36,80 @@ const themes = {
   },
 };
 
-const TimelineItem = ({ year, title, description, season, side, index }) => {
+const TimelineItem = ({
+  year,
+  title,
+  description,
+  season,
+  side,
+  index,
+  onClick,
+}) => {
   const theme = themes[season] || themes.spring;
   const alignLeft = side === "left";
 
   return (
-    <div className="relative py-8">
-      <div
-        className={`relative md:w-1/2 ${
-          alignLeft ? "md:pr-12 md:mr-auto" : "md:pl-12 md:ml-auto"
-        }`}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.4, delay: index * 0.04 }}
-          className="rounded-3xl border px-6 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
-          style={{
-            background: theme.glaze,
-            borderColor: theme.ring,
-          }}
+      <div className="relative py-8" onClick={onClick}>
+        <div
+          className={`relative md:w-1/2 ${
+            alignLeft ? "md:pr-12 md:mr-auto" : "md:pl-12 md:ml-auto"
+          }`}
         >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p
-                className="text-xs font-semibold uppercase tracking-[0.25em]"
-                style={{ color: theme.accent }}
-              >
-                {theme.label}
-              </p>
-              <h3
-                className="mt-2 text-2xl font-semibold"
-                style={{ color: "#3B2316" }}
-              >
-                {title}
-              </h3>
-            </div>
-            <div
-              className="rounded-full px-3 py-1 text-xs font-semibold"
-              style={{
-                background: theme.soft,
-                color: theme.accent,
-              }}
-            >
-              {theme.chip} {year}
-            </div>
-          </div>
-          <p
-            className="mt-3 text-sm leading-relaxed"
-            style={{ color: "#5E3A22" }}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.4, delay: index * 0.04 }}
+            className="rounded-3xl border px-6 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+            style={{
+              background: theme.glaze,
+              borderColor: theme.ring,
+            }}
           >
-            {description}
-          </p>
-        </motion.div>
-      </div>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p
+                  className="text-xs font-semibold uppercase tracking-[0.25em]"
+                  style={{ color: theme.accent }}
+                >
+                  {theme.label}
+                </p>
+                <h3
+                  className="mt-2 text-2xl font-semibold"
+                  style={{ color: "#3B2316" }}
+                >
+                  {title}
+                </h3>
+              </div>
+              <div
+                className="rounded-full px-3 py-1 text-xs font-semibold"
+                style={{
+                  background: theme.soft,
+                  color: theme.accent,
+                }}
+              >
+                {theme.chip} {year}
+              </div>
+            </div>
+            <p
+              className="mt-3 text-sm leading-relaxed"
+              style={{ color: "#5E3A22" }}
+            >
+              {description}
+            </p>
+          </motion.div>
+        </div>
 
-      <div
-        className="absolute left-1/2 top-10 hidden -translate-x-1/2 md:block"
-        style={{ color: theme.accent }}
-      >
-        <span
-          className="block h-3.5 w-3.5 rounded-full border-2"
-          style={{ borderColor: theme.accent, background: theme.soft }}
-        />
+        <div
+          className="absolute left-1/2 top-10 hidden -translate-x-1/2 md:block"
+          style={{ color: theme.accent }}
+        >
+          <span
+            className="block h-3.5 w-3.5 rounded-full border-2"
+            style={{ borderColor: theme.accent, background: theme.soft }}
+          />
+        </div>
       </div>
-    </div>
   );
 };
 

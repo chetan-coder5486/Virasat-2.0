@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTimelineStories } from "@/hooks/useTImelineStories";
+import ViewStoryModal from "@/components/ViewStoryModal";
 
 const seasonThemes = {
   spring: {
@@ -110,6 +111,8 @@ const particleConfig = {
 export default function Timeline() {
   const [search, setSearch] = useState("");
   const [activeSeason, setActiveSeason] = useState(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [selectedStory, setSelectedStory] = useState(null);
   const {
     stories: timelineStories,
     loading,
@@ -176,7 +179,15 @@ export default function Timeline() {
         )}
       </div>
       <Navbar />
-
+        {isViewOpen && (
+        <ViewStoryModal
+          story={selectedStory}
+          onClose={() => {
+            setIsViewOpen(false);
+            setSelectedStory(null);
+          }}
+        />
+      )}
       {/* Hero */}
       <div
         className="relative overflow-hidden"
@@ -313,7 +324,11 @@ export default function Timeline() {
                 {...event}
                 side={i % 2 === 0 ? "left" : "right"}
                 index={i}
-              />
+                onClick={() => {
+                  setSelectedStory(event);
+                  setIsViewOpen(true);
+                }}
+                />
             ))}
           </div>
 

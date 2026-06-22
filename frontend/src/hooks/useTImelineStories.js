@@ -19,10 +19,13 @@ const normalizeTimelineStory = (story) => {
   const year = date && !Number.isNaN(date.getTime()) ? `${date.getFullYear()}` : "";
   return {
     id: story._id,
+    author: story.author,
     title: story.title,
     description: story.description || "",
     season: getSeasonFromDate(story.date),
     year,
+    tags: Array.isArray(story.tags) ? story.tags : [],
+    memoryFiles: story.memoryFiles || [],
     date: story.date || null,
     raw: story,
   };
