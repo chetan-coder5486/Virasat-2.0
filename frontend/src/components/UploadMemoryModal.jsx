@@ -14,10 +14,11 @@ import {
   Image,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useUpload } from "@/context/UploadContext";
 import { useQueryClient } from "@tanstack/react-query";
 
 const UPLOAD_PRESET_IMAGES = "family_trunk_uploads";
-const UPLOAD_PRESET_VIDEOS = "family_trunk_video_uploads"
+const UPLOAD_PRESET_VIDEOS = "family_trunk_video_uploads";
 const SIGNATURE_ENDPOINT = "/user/cloudinary-signature";
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
@@ -118,10 +119,13 @@ export const UploadMemoryModal = ({
   circleName = null,
 }) => {
   const { api } = useAuth();
+  const { updateUploadProgress } = useUpload();
 
   const queryClient = useQueryClient();
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // Scope: "family" for family stories, circleId for circle stories
+  const uploadScope = circleId || "family";
+  
   const isCircleStory = Boolean(circleId);
 
   const [step, setStep] = useState(1); // 1 = details, 2 = media
@@ -195,7 +199,7 @@ export const UploadMemoryModal = ({
 
   // ── Upload to Cloudinary ────────────────────────────────────────────────────
 
-  const getCloudinarySignature = async (resourceType,preset) => {
+  const getCloudinarySignature = async (resourceType, preset) => {
     const response = await api.post(SIGNATURE_ENDPOINT, {
       uploadPreset: preset,
       resourceType,
@@ -206,10 +210,16 @@ export const UploadMemoryModal = ({
   const uploadToCloudinary = async (file, onProgress) => {
     const fd = new FormData();
     const resourceType = file.type.startsWith("video") ? "video" : "image";
-    const preset = (resourceType==="video")?UPLOAD_PRESET_VIDEOS:UPLOAD_PRESET_IMAGES;
+    const preset =
+      resourceType === "video" ? UPLOAD_PRESET_VIDEOS : UPLOAD_PRESET_IMAGES;
     const { signature, timestamp, apiKey, cloudName } =
-    await getCloudinarySignature(resourceType,preset);
-    console.log("Cloudinary signature obtained:", { signature, timestamp, apiKey, cloudName });
+      await getCloudinarySignature(resourceType, preset);
+    console.log("Cloudinary signature obtained:", {
+      signature,
+      timestamp,
+      apiKey,
+      cloudName,
+    });
     fd.append("file", file);
     fd.append("api_key", apiKey);
     fd.append("timestamp", timestamp);
@@ -239,7 +249,7 @@ export const UploadMemoryModal = ({
 
       // Close modal immediately and show loading card
       onClose();
-      
+
       const totalBytes =
         uploadedMedia.reduce((s, m) => s + (m.file?.size || 0), 0) || 1;
       let uploadedBytes = 0;
@@ -248,19 +258,29 @@ export const UploadMemoryModal = ({
       for (const media of uploadedMedia) {
         const fileLabel = media.name;
         setCurrentFileLabel(fileLabel);
-        
+
         // Notify parent of upload progress
-        if (onUploadStart) {
-          onUploadStart({
+        updateUploadProgress(
+          {
             fileName: fileLabel,
             progress: 0,
-          });
-        }
+          },
+          uploadScope,
+        );
 
         const result = await uploadToCloudinary(media.file, (loaded) => {
-          const newProgress = Math.round(((uploadedBytes + loaded) / totalBytes) * 100);
+          const newProgress = Math.round(
+            ((uploadedBytes + loaded) / totalBytes) * 100,
+          );
           setUploadProgress(newProgress);
-          
+
+          updateUploadProgress(
+            {
+              fileName: fileLabel,
+              progress: newProgress,
+            },
+            uploadScope,
+          );
           if (onUploadStart) {
             onUploadStart({
               fileName: fileLabel,
@@ -271,14 +291,21 @@ export const UploadMemoryModal = ({
         uploadedBytes += media.file?.size || 0;
         const finalProgress = Math.round((uploadedBytes / totalBytes) * 100);
         setUploadProgress(finalProgress);
-        
+
+        updateUploadProgress(
+          {
+            fileName: fileLabel,
+            progress: finalProgress,
+          },
+          uploadScope,
+        );
         if (onUploadStart) {
           onUploadStart({
             fileName: fileLabel,
             progress: finalProgress,
           });
         }
-        
+
         uploadedFiles.push(result);
       }
 
@@ -297,8 +324,16 @@ export const UploadMemoryModal = ({
       queryClient.invalidateQueries({
         queryKey: ["stories", circleId ?? "family"],
       });
-      
+
       // Notify parent that upload is complete
+      updateUploadProgress(
+        {
+          fileName: "",
+          progress: 100,
+          completed: true,
+        },
+        uploadScope,
+      );
       if (onUploadStart) {
         onUploadStart({
           fileName: "",
@@ -306,7 +341,7 @@ export const UploadMemoryModal = ({
           completed: true,
         });
       }
-      
+
       if (onCreated) onCreated(res.data);
     } catch (err) {
       console.error("Failed to create memory:", err);

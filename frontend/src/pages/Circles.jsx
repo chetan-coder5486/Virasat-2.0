@@ -9,6 +9,7 @@ import CircleStories from "@/components/CircleStories";
 import ViewCircleMembers from "@/components/ViewCircleMembers";
 import { useCircles } from "@/hooks/useCircles";
 import { useFamily } from "@/hooks/useFamily";
+import { useUpload } from "@/context/UploadContext";
 import { Link } from "react-router";
 
 const Circles = () => {
@@ -19,9 +20,7 @@ const Circles = () => {
   const [showMembers, setShowMembers] = useState(false);
   const [showCreateCircle, setShowCreateCircle] = useState(false);
   const [showUploadMemory, setShowUploadMemory] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [currentFileName, setCurrentFileName] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+  const { isUploading, uploadProgress, currentFileName } = useUpload();
   const normalizedCircles = Array.isArray(circles) ? circles : [];
   const circlePalette = [
     "bg-emerald-500",
@@ -291,9 +290,6 @@ const Circles = () => {
                                   circleId={activeCircleId}
                                   viewMode={viewMode}
                                   onAddStory={() => setShowUploadMemory(true)}
-                                  isUploading={isUploading}
-                                  uploadProgress={uploadProgress}
-                                  currentFileName={currentFileName}
                                 />
                               </>
                             )}
@@ -334,18 +330,6 @@ const Circles = () => {
           onClose={() => setShowUploadMemory(false)}
           circleId={activeCircleId}
           circleName={activeCircleName}
-          onUploadStart={(data) => {
-            setIsUploading(true);
-            setCurrentFileName(data.fileName);
-            setUploadProgress(data.progress);
-            if (data.completed) {
-              setIsUploading(false);
-              setTimeout(() => {
-                setUploadProgress(0);
-                setCurrentFileName("");
-              }, 2000);
-            }
-          }}
         />
       ) : null}
     </>

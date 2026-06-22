@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useStories } from "@/hooks/useStories";
 import { useFamily } from "@/hooks/useFamily.js";
 import { useAuth } from "@/context/AuthContext";
+import { useUpload } from "@/context/UploadContext";
 import { useQueryClient } from "@tanstack/react-query";
 
 const Stories = () => {
@@ -22,12 +23,10 @@ const Stories = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [showFilters, setShowFilters] = useState(true);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [currentFileName, setCurrentFileName] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
   const { data: family } = useFamily();
   const { stories, loading, error } = useStories();
   const { api } = useAuth();
+  const { isUploading, uploadProgress, currentFileName } = useUpload("family");
   const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
@@ -109,21 +108,7 @@ const Stories = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       {isUploadOpen && (
-        <UploadMemoryModal 
-          onClose={() => setIsUploadOpen(false)}
-          onUploadStart={(data) => {
-            setIsUploading(true);
-            setCurrentFileName(data.fileName);
-            setUploadProgress(data.progress);
-            if (data.completed) {
-              setIsUploading(false);
-              setTimeout(() => {
-                setUploadProgress(0);
-                setCurrentFileName("");
-              }, 2000);
-            }
-          }}
-        />
+        <UploadMemoryModal onClose={() => setIsUploadOpen(false)} />
       )}
       {isViewOpen && (
         <ViewStoryModal
@@ -200,7 +185,7 @@ const Stories = () => {
           <div className="py-12 text-center text-sm text-muted-foreground">
             Loading stories...
           </div>
-        ) : family==null ? (
+        ) : family == null ? (
           <div className="flex flex-col items-center py-12 text-center text-lg text-foreground font-display ">
             Join or create a family to start sharing stories.
             <Link
@@ -224,7 +209,7 @@ const Stories = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence>
               {isUploading && (
-                <LoadingStoryCard 
+                <LoadingStoryCard
                   uploadProgress={uploadProgress}
                   currentFileName={currentFileName}
                 />

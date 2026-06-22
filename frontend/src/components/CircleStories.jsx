@@ -5,21 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useStories } from "@/hooks/useStories";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
+import { useUpload } from "@/context/UploadContext";
 import { toast } from "react-toastify";
 import { AnimatePresence } from "framer-motion";
 
-const CircleStories = ({ 
-  circleId, 
-  viewMode = "scrapbook", 
-  onAddStory,
-  isUploading = false,
-  uploadProgress = 0,
-  currentFileName = "",
-}) => {
+const CircleStories = ({ circleId, viewMode = "scrapbook", onAddStory }) => {
   const { stories, loading, error } = useStories(circleId, {
     enabled: Boolean(circleId),
   });
-  const {api} = useAuth();
+  const { isUploading, uploadProgress, currentFileName } = useUpload(circleId);
+  const { api } = useAuth();
   const queryClient = useQueryClient();
   const [selectedStory, setSelectedStory] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -27,7 +22,9 @@ const CircleStories = ({
     if (!storyId) return;
     try {
       await api.delete(`/story/${storyId}`);
-      queryClient.invalidateQueries({ queryKey: ["stories", circleId ?? "family"] });
+      queryClient.invalidateQueries({
+        queryKey: ["stories", circleId ?? "family"],
+      });
       if (selectedStory?.id === storyId) {
         setIsViewOpen(false);
         setSelectedStory(null);
@@ -98,9 +95,11 @@ const CircleStories = ({
       <AnimatePresence>
         {isUploading && (
           <div
-            className={viewMode === "scrapbook" ? "mb-5 break-inside-avoid" : ""}
+            className={
+              viewMode === "scrapbook" ? "mb-5 break-inside-avoid" : ""
+            }
           >
-            <LoadingStoryCard 
+            <LoadingStoryCard
               uploadProgress={uploadProgress}
               currentFileName={currentFileName}
             />
