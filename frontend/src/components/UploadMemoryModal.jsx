@@ -153,6 +153,7 @@ export const UploadMemoryModal = ({
   const cleanupPreviews = (list) =>
     list.forEach((m) => m.previewUrl && URL.revokeObjectURL(m.previewUrl));
 
+  const todayStr = new Date().toISOString().split("T")[0];
   // ── Validation ──────────────────────────────────────────────────────────────
 
   const validate = () => {
